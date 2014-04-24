@@ -68,6 +68,10 @@ module control(
 									instr[3:0];
 
   assign wrReg = (opCode == `JAL) ? 4'hF :
+								 (opCode == `SW ) ? 4'h0 :
+                 (opCode == `B  ) ? 4'h0 :
+                 (opCode == `JR ) ? 4'h0 :
+                 (opCode == `HLT) ? 4'h0 :
                  instr[11:8];
 
   assign aluSrc = (opCode == `LLB) ? 1'b0 : 

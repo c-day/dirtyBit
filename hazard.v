@@ -21,7 +21,7 @@ module hazard(
                 2'b11;
 
   assign haz2 = (rdReg2_EX == wrReg_MEM & rdReg2_EX != 4'h0) ? 2'b00 :
-                (rdReg2_EX == wrReg_WB &rdReg2_EX != 4'h0) ? 2'b01 :
+                (rdReg2_EX == wrReg_WB & rdReg2_EX != 4'h0) ? 2'b01 :
                 2'b11;
 
 	assign check = (opCode == `LLB) ? 2'b11 :
