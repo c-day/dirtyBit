@@ -25,7 +25,8 @@ module cpu(clk, rst_n, hlt, pc);
         aluSrc_FF_EX, hlt_ID_FF, hlt_FF_EX, memRd_EX_FF, memRd_FF_MEM, memWr_EX_FF, mem2reg_EX_FF,
         sawBr_EX_FF, sawBr_FF_MEM, sawJ_EX_FF, hlt_EX_FF, mem2reg_MEM_FF, mem2reg_FF_WB, hlt_MEM_FF,
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB, PCSrc_MEM_IF,
-				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB;
+				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
+				rdReg1En_ID, rdReg2En_ID;
 
 	assign IF_ID_EN = ~hlt;
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -38,19 +39,6 @@ module cpu(clk, rst_n, hlt, pc);
 	assign rst_n_MEM_WB = rst_n;
 
 	assign pc = pc_FF_WB + 1;
-
-
-hazard H(
-	.opCode(instr_FF_EX[15:12]),
-  .rdReg1_EX(rdReg1_FF_EX),
-  .rdReg2_EX(rdReg2_FF_EX),
-  .wrReg_EX(wrReg_FF_EX),
-  .wrReg_MEM(wrReg_FF_MEM),
-  .wrReg_WB(wrReg_FF_WB),
-  .reg1hazSel(reg1hazSel),
-  .reg2hazSel(reg2hazSel)
-);
-
 
 IF IF(
   .clk(clk),
@@ -92,16 +80,45 @@ ID ID(
   .o_rdReg1(rdReg1_ID_FF),
   .o_rdReg2(rdReg2_ID_FF),
   .o_hlt(hlt_ID_FF),
-  .o_wrRegEn(wrRegEn_ID_FF)
+  .o_wrRegEn(wrRegEn_ID_FF),
+	.o_rdReg1En(rdReg1En_ID),
+	.o_rdReg2En(rdReg2En_ID)
 );
+
+hzdDet hzd(
+	.reg1_fwdCtrl(reg1hazSel), 
+	.reg2_fwdCtrl(reg2hazSel), 
+	.rdReg1_ID(rdReg1_ID_FF), 
+	.rdReg2_ID(rdReg2_ID_FF), 
+	.wrReg_EX(wrReg_FF_EX), 
+	.wrReg_MEM(wrReg_FF_MEM), 
+	.wrReg_WB(wrReg_FF_WB), 
+	.rdEn1_ID(rdReg1En_ID), 
+	.rdEn2_ID(rdReg2En_ID), 
+	.wrEn_EX(wrRegEn_FF_EX), 
+	.wrEn_MEM(wrRegEn_FF_MEM), 
+	.wrEn_WB(wrRegEn_FF_WB)
+);
+
+assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
+									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
+									(reg1hazSel == `FWD_FROM_MEM) ? 
+									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
+									reg1_ID_FF;
+									
+assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
+									(reg2hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
+									(reg2hazSel == `FWD_FROM_MEM) ? aluResult_MEM_FF :
+									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
+									reg2_ID_FF;
 
 /////////////////////////////////////////////// ID/EX passthrough /////////////////////////////////////////////////////
 assign pc_ID_FF = pc_FF_ID;
 
 //////////////////////////////////////////////////  ID/EX flops ///////////////////////////////////////////////////////
 dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff_16 ff03(.q(reg1_FF_EX), .d(reg1_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff_16 ff04(.q(reg2_FF_EX), .d(reg2_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
@@ -118,21 +135,11 @@ dff    ff17(.q(aluSrc_FF_EX), .d(aluSrc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_E
 dff    ff18(.q(hlt_FF_EX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 
-///////////////////////////////////////////// Data forwarding selection ///////////////////////////////////////////////
-assign FWD_reg1 = (reg1hazSel == 2'b00) ? //aluResult_FF_MEM :
-											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
-									(reg1hazSel == 2'b01) ? wrData_WB_ID :
-                  reg1_FF_EX;
-
-assign FWD_reg2 = (reg2hazSel == 2'b00) ? aluResult_FF_MEM :
-                  (reg2hazSel == 2'b01) ? wrData_WB_ID :
-                  reg2_FF_EX;
-
 EX EX(
   .pc(pc_FF_EX),
   .instr(instr_FF_EX),
-  .reg1(FWD_reg1),
-  .reg2(FWD_reg2),
+  .reg1(reg1_FF_EX),
+  .reg2(reg2_FF_EX),
   .sextIn(sext_FF_EX),
   .aluSrc(aluSrc_FF_EX),
   .aluOp(aluOp_FF_EX),

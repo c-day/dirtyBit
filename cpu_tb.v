@@ -28,7 +28,7 @@ module clk_and_rst_n;
         end
         $strobe("Time:    %7d\nCycles:   %6d\nPC:         %4h", $time, total_cycles, PC_plus_1);
         #10;
-        $finish(0);
+        $stop;
     end
 
     initial total_cycles = 16'h0000;
