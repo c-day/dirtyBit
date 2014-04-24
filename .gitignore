@@ -5,6 +5,7 @@
 *.wlf
 *.mpf
 *.mti
+*.hex
 work/
 
 
