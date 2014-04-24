@@ -44,6 +44,7 @@ module control(
                    (opCode == `SW ) ? 1'b0 :
                    (opCode == `B  ) ? 1'b0 :
                    (opCode == `JR ) ? 1'b0 :
+									 (opCode == `ADDZ & Z == 1'b0) ? 1'b0 :
                    1'b1;
 
   assign memRd = (opCode == `LW) ? 1'b1 : 1'b0;
@@ -79,7 +80,7 @@ module control(
                   rdEnReg2;
 
   assign aluOp = (opCode == `ADD) ? `ALU_ADD :
-                 (opCode == `ADDZ & Z == 1'b1) ? `ALU_ADD :
+                 (opCode == `ADDZ) ? `ALU_ADD :
                  (opCode == `SUB) ? `ALU_SUB :
                  (opCode == `SLL) ? `ALU_SLL :
                  (opCode == `SRA) ? `ALU_SRA :

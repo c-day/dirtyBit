@@ -36,3 +36,9 @@
 `define BLTE    3'b101
 `define BOVFL   3'b110
 `define BUNCOND 3'b111
+
+//Define the codes for hazard/forwarding logic
+`define NO_FWD  			2'b00
+`define FWD_FROM_EX		2'b01
+`define FWD_FROM_MEM	2'b10
+`define FWD_FROM_WB		2'b11
