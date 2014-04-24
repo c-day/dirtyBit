@@ -103,6 +103,7 @@ hzdDet hzd(
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
 									(reg1hazSel == `FWD_FROM_MEM) ? 
+											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
