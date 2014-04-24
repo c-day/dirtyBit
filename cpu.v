@@ -26,6 +26,7 @@ module cpu(clk, rst_n, hlt);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB, PCSrc_MEM_IF,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB;
 
+
 	assign IF_ID_EN = 1'b1;
 	assign ID_EX_EN = 1'b1;
 	assign EX_MEM_EN = 1'b1;
