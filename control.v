@@ -38,6 +38,7 @@ module control(
                     (opCode == `AND) ? 1'b1 :
                     (opCode == `NOR) ? 1'b1 :
 										(opCode == `JR ) ? 1'b1 :
+										(opCode == `SW ) ? 1'b1 :
                     1'b0;
 
   assign wrRegEn = (opCode == `HLT) ? 1'b0 :

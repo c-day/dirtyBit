@@ -102,8 +102,7 @@ hzdDet hzd(
 
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg1hazSel == `FWD_FROM_MEM) ? 
-											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
+									(reg1hazSel == `FWD_FROM_MEM) ? aluResult_FF_MEM :
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
@@ -159,7 +158,7 @@ assign sawBr_EX_FF = sawBr_FF_EX;
 assign sawJ_EX_FF = sawJ_FF_EX;
 assign hlt_EX_FF = hlt_FF_EX;
 assign wrRegEn_EX_FF = wrRegEn_FF_EX;
-assign reg2_EX_FF = FWD_reg2;
+assign reg2_EX_FF = reg2_FF_EX;
 assign branchOp_EX_FF = instr_FF_EX[11:9];
 assign pc_EX_FF = pc_FF_EX;
 assign instr_EX_FF = instr_FF_EX;
