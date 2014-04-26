@@ -14,7 +14,7 @@ module cpu(clk, rst_n, hlt, pc);
               wrData_WB_ID, reg1_ID_FF, reg1_FF_EX, reg2_ID_FF, reg2_FF_EX, reg2_EX_FF, reg2_FF_MEM,
 							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF;
 
-  wire [3:0]  wrReg_FF_EX, wrReg_ID_FF,
+  wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_MUX_FF,
               wrReg_EX_FF, wrReg_FF_MEM, wrReg_MEM_FF, wrReg_FF_WB, aluOp_ID_FF, aluOp_FF_EX,
               shAmt_ID_FF, shAmt_FF_EX, rdReg1_ID_FF, rdReg1_FF_EX, rdReg2_ID_FF, rdReg2_FF_EX;
 
@@ -26,9 +26,9 @@ module cpu(clk, rst_n, hlt, pc);
         sawBr_EX_FF, sawBr_FF_MEM, sawJ_EX_FF, hlt_EX_FF, mem2reg_MEM_FF, mem2reg_FF_WB, hlt_MEM_FF,
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB, PCSrc_MEM_IF,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
-				rdReg1En_ID, rdReg2En_ID;
+				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall;
 
-	assign IF_ID_EN = ~hlt;
+	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
 	assign EX_MEM_EN = ~hlt_FF_MEM;
 	assign MEM_WB_EN = ~hlt;
@@ -114,8 +114,18 @@ assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
 									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg2_ID_FF;
 
+assign LW_Stall = (((reg1hazSel == `FWD_FROM_EX) | (reg2hazSel == `FWD_FROM_EX)) & (instr_FF_EX[15:12] == `LW)) & ~oldStall;
+
+dff stallTrack(.q(oldStall), .d(LW_Stall), .en(1'b1), .rst_n(1'b1), .clk(clk));
+
 /////////////////////////////////////////////// ID/EX passthrough /////////////////////////////////////////////////////
 assign pc_ID_FF = pc_FF_ID;
+
+/////////////////////////////////////////// No-op injection on stall //////////////////////////////////////////////////
+assign memRd_MUX_FF 	= (LW_Stall) ? 1'b0 : memRd_ID_FF;
+assign memWr_MUX_FF		= (LW_Stall) ? 1'b0 : memWr_ID_FF;
+assign wrRegEn_MUX_FF = (LW_Stall) ? 1'b0 : wrRegEn_ID_FF;
+assign wrReg_MUX_FF		= (LW_Stall) ? 4'h0 : wrReg_ID_FF;
 
 //////////////////////////////////////////////////  ID/EX flops ///////////////////////////////////////////////////////
 dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
@@ -123,19 +133,19 @@ dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .c
 dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff08(.q(aluOp_FF_EX), .d(aluOp_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff09(.q(shAmt_FF_EX), .d(shAmt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff10(.q(rdReg1_FF_EX), .d(rdReg1_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff11(.q(rdReg2_FF_EX), .d(rdReg2_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff12(.q(memRd_FF_EX), .d(memRd_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff13(.q(memWr_FF_EX), .d(memWr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff12(.q(memRd_FF_EX), .d(memRd_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff13(.q(memWr_FF_EX), .d(memWr_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff14(.q(mem2reg_FF_EX), .d(mem2reg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff15(.q(sawBr_FF_EX), .d(sawBr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff16(.q(sawJ_FF_EX), .d(sawJ_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff17(.q(aluSrc_FF_EX), .d(aluSrc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff18(.q(hlt_FF_EX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 
 EX EX(
   .pc(pc_FF_EX),
