@@ -12,10 +12,9 @@ module cpu(clk, rst_n, hlt, pc);
               sext_FF_EX, sext_ID_FF, aluResult_EX_FF, aluResult_FF_MEM, targetAddr_EX_FF,
               targetAddr_FF_MEM, rdData_MEM_FF, rdData_FF_WB, aluResult_MEM_FF, aluResult_FF_WB,
               wrData_WB_ID, reg1_ID_FF, reg1_FF_EX, reg2_ID_FF, reg2_FF_EX, reg2_EX_FF, reg2_FF_MEM,
-							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF,
-							instr_FF_MUX, instr_MUX_EX;
+							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF;
 
-  wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_FF_MUX, wrReg_MUX_EX,
+  wire [3:0]  wrReg_FF_EX, wrReg_ID_FF,
               wrReg_EX_FF, wrReg_FF_MEM, wrReg_MEM_FF, wrReg_FF_WB, aluOp_ID_FF, aluOp_FF_EX,
               shAmt_ID_FF, shAmt_FF_EX, rdReg1_ID_FF, rdReg1_FF_EX, rdReg2_ID_FF, rdReg2_FF_EX;
 
@@ -25,14 +24,12 @@ module cpu(clk, rst_n, hlt, pc);
         mem2reg_ID_FF, mem2reg_FF_EX, sawBr_ID_FF, sawBr_FF_EX, sawJ_ID_FF, sawJ_FF_EX, aluSrc_ID_FF,
         aluSrc_FF_EX, hlt_ID_FF, hlt_FF_EX, memRd_EX_FF, memRd_FF_MEM, memWr_EX_FF, mem2reg_EX_FF,
         sawBr_EX_FF, sawBr_FF_MEM, sawJ_EX_FF, hlt_EX_FF, mem2reg_MEM_FF, mem2reg_FF_WB, hlt_MEM_FF,
-        wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
+        wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB, PCSrc_MEM_IF,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
-				rdReg1En_ID, rdReg2En_ID, memRd_FF_MUX, memWr_FF_MUX, sawBr_FF_MUX, sawJ_FF_MUX, hlt_FF_MUX,
-				wrRegEn_FF_MUX, PCSrc_MEM_IF, memRd_MUX_EX, memWr_MUX_EX, sawBr_MUX_EX, sawJ_MUX_EX, hlt_MUX_EX,
-				wrRegEn_MUX_EX, LW_Stall_ID, LW_Stall_EX, sawStall;
+				rdReg1En_ID, rdReg2En_ID;
 
-	assign IF_ID_EN = ~(hlt | LW_Stall_ID | LW_Stall_EX);
-	assign ID_EX_EN = ~(hlt_MUX_EX | LW_Stall_EX);
+	assign IF_ID_EN = ~hlt;
+	assign ID_EX_EN = ~hlt_FF_EX;
 	assign EX_MEM_EN = ~hlt_FF_MEM;
 	assign MEM_WB_EN = ~hlt;
 
@@ -93,45 +90,27 @@ hzdDet hzd(
 	.reg2_fwdCtrl(reg2hazSel), 
 	.rdReg1_ID(rdReg1_ID_FF), 
 	.rdReg2_ID(rdReg2_ID_FF), 
-	.wrReg_EX(wrReg_MUX_EX), 
+	.wrReg_EX(wrReg_FF_EX), 
 	.wrReg_MEM(wrReg_FF_MEM), 
 	.wrReg_WB(wrReg_FF_WB), 
 	.rdEn1_ID(rdReg1En_ID), 
 	.rdEn2_ID(rdReg2En_ID), 
-	.wrEn_EX(wrRegEn_MUX_EX), 
+	.wrEn_EX(wrRegEn_FF_EX), 
 	.wrEn_MEM(wrRegEn_FF_MEM), 
 	.wrEn_WB(wrRegEn_FF_WB)
 );
 
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg1hazSel == `FWD_FROM_MEM) ? //aluResult_FF_MEM :
-											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
+									(reg1hazSel == `FWD_FROM_MEM) ? aluResult_FF_MEM :
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
 assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
 									(reg2hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg2hazSel == `FWD_FROM_MEM) ? //aluResult_MEM_FF :
-											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
+									(reg2hazSel == `FWD_FROM_MEM) ? aluResult_MEM_FF :
 									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg2_ID_FF;
-
-assign LW_Stall_ID = (((reg1hazSel == `FWD_FROM_EX) | (reg2hazSel == `FWD_FROM_EX)) & (instr_MUX_EX[15:12] == `LW)) & ~LW_Stall_EX;
-
-/*
-always @(*) begin
-	$display("\n--------------------------------------------------------");
-	$display("reg1hazSel: %h", reg1hazSel);
-	$display("reg2hazSel: %h", reg2hazSel);
-	$display("one: %b", (reg1hazSel == `FWD_FROM_EX));
-	$display("two: %b", (reg2hazSel == `FWD_FROM_EX));
-	$display("three: %b", ((reg1hazSel == `FWD_FROM_EX) | (reg2hazSel == `FWD_FROM_EX)));
-	$display("four: %b", (instr_MUX_EX[15:12] == `LW));
-	$display("sawStall: %b", sawStall);
-	$display("lw_stall: %b", LW_Stall);
-end
-*/
 
 /////////////////////////////////////////////// ID/EX passthrough /////////////////////////////////////////////////////
 assign pc_ID_FF = pc_FF_ID;
@@ -140,36 +119,25 @@ assign pc_ID_FF = pc_FF_ID;
 dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff_16 ff05(.q(instr_FF_MUX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff_4  ff07(.q(wrReg_FF_MUX), .d(wrReg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff08(.q(aluOp_FF_EX), .d(aluOp_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff09(.q(shAmt_FF_EX), .d(shAmt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff10(.q(rdReg1_FF_EX), .d(rdReg1_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff11(.q(rdReg2_FF_EX), .d(rdReg2_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff12(.q(memRd_FF_MUX), .d(memRd_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff13(.q(memWr_FF_MUX), .d(memWr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff12(.q(memRd_FF_EX), .d(memRd_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff13(.q(memWr_FF_EX), .d(memWr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff14(.q(mem2reg_FF_EX), .d(mem2reg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff15(.q(sawBr_FF_MUX), .d(sawBr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff16(.q(sawJ_FF_MUX), .d(sawJ_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff15(.q(sawBr_FF_EX), .d(sawBr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff16(.q(sawJ_FF_EX), .d(sawJ_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff17(.q(aluSrc_FF_EX), .d(aluSrc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff18(.q(hlt_FF_MUX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff19(.q(wrRegEn_FF_MUX), .d(wrRegEn_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff		 ff51(.q(LW_Stall_EX), .d(LW_Stall_ID), .en(1'b1), .rst_n(rst_n_ID_EX), .clk(clk));
-
-assign memRd_MUX_EX 	= (LW_Stall_EX == 1'b1) ? 1'b0 : memRd_FF_MUX;
-assign memWr_MUX_EX 	= (LW_Stall_EX == 1'b1) ? 1'b0 : memWr_FF_MUX;
-assign sawBr_MUX_EX 	= (LW_Stall_EX == 1'b1) ? 1'b0 : sawBr_FF_MUX;
-assign sawJ_MUX_EX  	= (LW_Stall_EX == 1'b1) ? 1'b0 : sawJ_FF_MUX;
-assign hlt_MUX_EX   	= (LW_Stall_EX == 1'b1) ? 1'b0 : hlt_FF_MUX;
-assign wrRegEn_MUX_EX = (LW_Stall_EX == 1'b1) ? 1'b0 : wrRegEn_FF_MUX;
-assign wrReg_MUX_EX		= (LW_Stall_EX == 1'b1) ? 4'h0 : wrReg_FF_MUX;
-assign instr_MUX_EX		= (LW_Stall_EX == 1'b1) ? 16'd0: instr_FF_MUX;
-
+dff    ff18(.q(hlt_FF_EX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 
 EX EX(
   .pc(pc_FF_EX),
-  .instr(instr_MUX_EX),
+  .instr(instr_FF_EX),
   .reg1(reg1_FF_EX),
   .reg2(reg2_FF_EX),
   .sextIn(sext_FF_EX),
@@ -182,18 +150,18 @@ EX EX(
 );
 
 ////////////////////////////////////////////// EX/MEM passthrough /////////////////////////////////////////////////////
-assign wrReg_EX_FF = wrReg_MUX_EX;
-assign memRd_EX_FF = memRd_MUX_EX;
-assign memWr_EX_FF = memWr_MUX_EX;
+assign wrReg_EX_FF = wrReg_FF_EX;
+assign memRd_EX_FF = memRd_FF_EX;
+assign memWr_EX_FF = memWr_FF_EX;
 assign mem2reg_EX_FF = mem2reg_FF_EX;
-assign sawBr_EX_FF = sawBr_MUX_EX;
-assign sawJ_EX_FF = sawJ_MUX_EX;
-assign hlt_EX_FF = hlt_MUX_EX;
-assign wrRegEn_EX_FF = wrRegEn_MUX_EX;
+assign sawBr_EX_FF = sawBr_FF_EX;
+assign sawJ_EX_FF = sawJ_FF_EX;
+assign hlt_EX_FF = hlt_FF_EX;
+assign wrRegEn_EX_FF = wrRegEn_FF_EX;
 assign reg2_EX_FF = reg2_FF_EX;
 assign branchOp_EX_FF = instr_FF_EX[11:9];
 assign pc_EX_FF = pc_FF_EX;
-assign instr_EX_FF = instr_MUX_EX;
+assign instr_EX_FF = instr_FF_EX;
 
 ////////////////////////////////////////////////// EX/MEM flops ///////////////////////////////////////////////////////
 dff_16 ff20(.q(aluResult_FF_MEM), .d(aluResult_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
@@ -211,7 +179,6 @@ dff    ff29(.q(sawBr_FF_MEM), .d(sawBr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_M
 dff    ff30(.q(sawJ_FF_MEM), .d(sawJ_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff31(.q(hlt_FF_MEM), .d(hlt_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
-//dff		 ff50(.q(sawStall), .d(LW_Stall), .en(1'b1), .rst_n(rst_n_EX_MEM), .clk(clk));
 
 
 MEM MEM(

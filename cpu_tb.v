@@ -42,7 +42,7 @@ module clk_and_rst_n;
             force halt = 1'b0;
             force halt = 1'b1;
             #10;
-            $stop;
+            $finish(-1);
         end
     end
 
