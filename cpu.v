@@ -102,13 +102,15 @@ hzdDet hzd(
 
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg1hazSel == `FWD_FROM_MEM) ? aluResult_FF_MEM :
+									(reg1hazSel == `FWD_FROM_MEM) ? //aluResult_FF_MEM :
+											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
 assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
 									(reg2hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg2hazSel == `FWD_FROM_MEM) ? aluResult_MEM_FF :
+									(reg2hazSel == `FWD_FROM_MEM) ? //aluResult_MEM_FF :
+											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
 									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg2_ID_FF;
 
