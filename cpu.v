@@ -27,7 +27,7 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
-				pcStallHlt, PCSrc_MEM_IF, flag_EN, setFlags_ID_FF, setFlags_FF_EX, wrRegEn_ID_MUX;
+				pcStallHlt, PCSrc_MEM_IF, flag_EN, setFlags_ID_FF, setFlags_FF_EX;
 
 	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -44,7 +44,7 @@ module cpu(clk, rst_n, hlt, pc);
 	assign pcStallHlt = hlt | LW_Stall;
 
 ///////////////////////////////////////////////  global flags reg /////////////////////////////////////////////////////
-dff_3	gf(.q(globalFlags), .d(flags_FF_MEM), .en(setFlags_FF_MEM), .rst_n(rst_n), .clk(clk));															///
+dff_3	gf(.q(globalFlags), .d(newFlags), .en(setFlags_FF_EX), .rst_n(rst_n), .clk(clk));															///
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -94,16 +94,11 @@ ID ID(
   .o_rdReg1(rdReg1_ID_FF),
   .o_rdReg2(rdReg2_ID_FF),
   .o_hlt(hlt_ID_FF),
-  .o_wrRegEn(wrRegEn_ID_MUX),
+  .o_wrRegEn(wrRegEn_ID_FF),
 	.o_rdReg1En(rdReg1En_ID),
 	.o_rdReg2En(rdReg2En_ID),
 	.o_setFlags(setFlags_ID_FF)
 );
-
-assign wrRegEn_ID_FF = (instr_ID_FF[15:12] == `ADDZ) ?
-														(globalFlags[1] == 1'b1) ? 1'b1 : 1'b0 :
-												wrRegEn_ID_MUX;
-
 
 hzdDet hzd(
 	.reg1_fwdCtrl(reg1hazSel), 
@@ -182,11 +177,11 @@ EX EX(
   .aluOp(aluOp_FF_EX),
   .shAmt(shAmt_FF_EX),
   .aluResult(aluResult_EX_FF),
-  .flags(flags_EX_FF),
+  .flags(newFlags),
   .targetAddr(targetAddr_EX_FF)
 );
 
-//assign wrRegEn_EX_FF = (instr_FF_EX == `ADDZ) ? (wrRegEn_FF_EX & globalFlags[1]) : wrRegEn_FF_EX;
+assign wrRegEn_EX_FF = (instr_FF_EX == `ADDZ) ? (wrRegEn_FF_EX & globalFlags[1]) : wrRegEn_FF_EX;
 
 ////////////////////////////////////////////// EX/MEM passthrough /////////////////////////////////////////////////////
 assign wrReg_EX_FF = wrReg_FF_EX;
@@ -196,12 +191,11 @@ assign mem2reg_EX_FF = mem2reg_FF_EX;
 assign sawBr_EX_FF = sawBr_FF_EX;
 assign sawJ_EX_FF = sawJ_FF_EX;
 assign hlt_EX_FF = hlt_FF_EX;
-assign wrRegEn_EX_FF = wrRegEn_FF_EX;
+//assign wrRegEn_EX_FF = wrRegEn_FF_EX;
 assign reg2_EX_FF = reg2_FF_EX;
 assign branchOp_EX_FF = instr_FF_EX[11:9];
 assign pc_EX_FF = pc_FF_EX;
 assign instr_EX_FF = instr_FF_EX;
-assign setFlags_EX_FF = setFlags_FF_EX;
 
 ////////////////////////////////////////////////// EX/MEM flops ///////////////////////////////////////////////////////
 dff_16 ff20(.q(aluResult_FF_MEM), .d(aluResult_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
@@ -219,7 +213,6 @@ dff    ff29(.q(sawBr_FF_MEM), .d(sawBr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_M
 dff    ff30(.q(sawJ_FF_MEM), .d(sawJ_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff31(.q(hlt_FF_MEM), .d(hlt_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
-dff    ff54(.q(setFlags_FF_MEM), .d(setFlags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 
 
 /**********************************************************************************************************************
