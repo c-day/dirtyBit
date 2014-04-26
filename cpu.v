@@ -4,7 +4,7 @@ module cpu(clk, rst_n, hlt, pc);
   output hlt;
 	output [15:0] pc;
 
-  wire [2:0] flags_EX_FF, branchOp_EX_FF, branchOp_FF_MEM, flags_FF_MEM, globalFlags, newFlags;
+  wire [2:0] flags_EX_FF, branchOp_EX_FF, branchOp_FF_MEM, flags_FF_MEM;
 
   wire [15:0] FWD_reg1, FWD_reg2;
 
@@ -27,7 +27,11 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
+<<<<<<< HEAD
 				pcStallHlt, PCSrc_MEM_IF, flag_EN, setFlags_ID_FF, setFlags_FF_EX, wrRegEn_ID_MUX;
+=======
+				pcStallHlt, PCSrc_MEM_IF;
+>>>>>>> parent of eca8d3a... tried global flags...close but not quite
 
 	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -43,6 +47,7 @@ module cpu(clk, rst_n, hlt, pc);
 
 	assign pcStallHlt = hlt | LW_Stall;
 
+<<<<<<< HEAD
 ///////////////////////////////////////////////  global flags reg /////////////////////////////////////////////////////
 dff_3	gf(.q(globalFlags), .d(flags_FF_MEM), .en(setFlags_FF_MEM), .rst_n(rst_n), .clk(clk));															///
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,6 +56,8 @@ dff_3	gf(.q(globalFlags), .d(flags_FF_MEM), .en(setFlags_FF_MEM), .rst_n(rst_n),
 /**********************************************************************************************************************
 ////////////////////////////////////////////        IF Stage           ////////////////////////////////////////////////
 **********************************************************************************************************************/
+=======
+>>>>>>> parent of eca8d3a... tried global flags...close but not quite
 IF IF(
   .clk(clk),
   .hlt(pcStallHlt),
@@ -65,10 +72,6 @@ IF IF(
 dff_16 ff00(.q(pc_FF_ID), .d(pc_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 dff_16 ff01(.q(instr_FF_ID), .d(instr_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 
-
-/**********************************************************************************************************************
-////////////////////////////////////////////        ID Stage           ////////////////////////////////////////////////
-**********************************************************************************************************************/
 ID ID(
   .i_clk(clk),
   .i_nRst(rst_n),
@@ -78,7 +81,8 @@ ID ID(
   .i_wrReg(wrReg_FF_WB),
   .i_wrData(wrData_WB_ID),
   .i_wrEn(wrRegEn_FF_WB),
-	.o_port0(reg1_ID_FF),
+	.i_Z(flags_EX_FF[1]),
+  .o_port0(reg1_ID_FF),
   .o_port1(reg2_ID_FF),
   .o_sext(sext_ID_FF),
   .o_instr(instr_ID_FF),
@@ -96,8 +100,7 @@ ID ID(
   .o_hlt(hlt_ID_FF),
   .o_wrRegEn(wrRegEn_ID_MUX),
 	.o_rdReg1En(rdReg1En_ID),
-	.o_rdReg2En(rdReg2En_ID),
-	.o_setFlags(setFlags_ID_FF)
+	.o_rdReg2En(rdReg2En_ID)
 );
 
 assign wrRegEn_ID_FF = (instr_ID_FF[15:12] == `ADDZ) ?
@@ -115,7 +118,7 @@ hzdDet hzd(
 	.wrReg_WB(wrReg_FF_WB), 
 	.rdEn1_ID(rdReg1En_ID), 
 	.rdEn2_ID(rdReg2En_ID), 
-	.wrEn_EX(wrRegEn_EX_FF), 
+	.wrEn_EX(wrRegEn_FF_EX), 
 	.wrEn_MEM(wrRegEn_FF_MEM), 
 	.wrEn_WB(wrRegEn_FF_WB)
 );
@@ -148,12 +151,12 @@ assign wrRegEn_MUX_FF = (LW_Stall) ? 1'b0 : wrRegEn_ID_FF;
 assign wrReg_MUX_FF		= (LW_Stall) ? 4'h0 : wrReg_ID_FF;
 
 //////////////////////////////////////////////////  ID/EX flops ///////////////////////////////////////////////////////
-dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));															///
-dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));														///
-dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));														///
-dff_16 ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));												///
-dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));													///
-dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));											///
+dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
+dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff08(.q(aluOp_FF_EX), .d(aluOp_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff09(.q(shAmt_FF_EX), .d(shAmt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff_4  ff10(.q(rdReg1_FF_EX), .d(rdReg1_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
@@ -166,12 +169,7 @@ dff    ff16(.q(sawJ_FF_EX), .d(sawJ_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), 
 dff    ff17(.q(aluSrc_FF_EX), .d(aluSrc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff18(.q(hlt_FF_EX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff		 ff52(.q(setFlags_FF_EX), .d(setFlags_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 
-
-/**********************************************************************************************************************
-////////////////////////////////////////////        EX Stage           ////////////////////////////////////////////////
-**********************************************************************************************************************/
 EX EX(
   .pc(pc_FF_EX),
   .instr(instr_FF_EX),
@@ -186,8 +184,11 @@ EX EX(
   .targetAddr(targetAddr_EX_FF)
 );
 
+<<<<<<< HEAD
 //assign wrRegEn_EX_FF = (instr_FF_EX == `ADDZ) ? (wrRegEn_FF_EX & globalFlags[1]) : wrRegEn_FF_EX;
 
+=======
+>>>>>>> parent of eca8d3a... tried global flags...close but not quite
 ////////////////////////////////////////////// EX/MEM passthrough /////////////////////////////////////////////////////
 assign wrReg_EX_FF = wrReg_FF_EX;
 assign memRd_EX_FF = memRd_FF_EX;
@@ -222,13 +223,10 @@ dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_
 dff    ff54(.q(setFlags_FF_MEM), .d(setFlags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 
 
-/**********************************************************************************************************************
-////////////////////////////////////////////       MEM Stage           ////////////////////////////////////////////////
-**********************************************************************************************************************/
 MEM MEM(
   .clk(clk),
   .memAddr(aluResult_FF_MEM),
-  .flags(globalFlags),
+  .flags(flags_FF_MEM),
   .wrData(reg2_FF_MEM),
   .memWr(memWr_FF_MEM),
   .memRd(memRd_FF_MEM),
@@ -238,8 +236,6 @@ MEM MEM(
   .rdData(rdData_MEM_FF),
   .PCSrc(PCSrc_MEM_IF)
 );
-
-//assign wrRegEn_MEM_FF = (instr_FF_MEM == `ADDZ) ? (wrRegEn_FF_MEM & globalFlags[1]) : wrRegEn_FF_MEM;
 
 ////////////////////////////////////////////// MEM/WB passthrough /////////////////////////////////////////////////////
 assign wrReg_MEM_FF = wrReg_FF_MEM;
@@ -260,10 +256,6 @@ dff    ff37(.q(hlt), .d(hlt_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(
 dff    ff38(.q(wrRegEn_FF_WB), .d(wrRegEn_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 dff    ff41(.q(PCSrc_FF_WB), .d(PCSrc_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 
-
-/**********************************************************************************************************************
-////////////////////////////////////////////        WB Stage           ////////////////////////////////////////////////
-**********************************************************************************************************************/
 WB WB(
   .memData(rdData_FF_WB),
   .aluResult(aluResult_FF_WB),
