@@ -24,9 +24,10 @@ module cpu(clk, rst_n, hlt, pc);
         mem2reg_ID_FF, mem2reg_FF_EX, sawBr_ID_FF, sawBr_FF_EX, sawJ_ID_FF, sawJ_FF_EX, aluSrc_ID_FF,
         aluSrc_FF_EX, hlt_ID_FF, hlt_FF_EX, memRd_EX_FF, memRd_FF_MEM, memWr_EX_FF, mem2reg_EX_FF,
         sawBr_EX_FF, sawBr_FF_MEM, sawJ_EX_FF, hlt_EX_FF, mem2reg_MEM_FF, mem2reg_FF_WB, hlt_MEM_FF,
-        wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB, PCSrc_MEM_IF,
+        wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
-				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall;
+				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
+				pcStallHlt, PCSrc_MEM_IF;
 
 	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -40,9 +41,11 @@ module cpu(clk, rst_n, hlt, pc);
 
 	assign pc = pc_FF_WB + 1;
 
+	assign pcStallHlt = hlt | LW_Stall;
+
 IF IF(
   .clk(clk),
-  .hlt(hlt),
+  .hlt(pcStallHlt),
   .nRst(rst_n),
   .altAddress(targetAddr_FF_MEM),
   .useAlt(PCSrc_MEM_IF),
