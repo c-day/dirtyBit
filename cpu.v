@@ -37,7 +37,7 @@ module cpu(clk, rst_n, hlt, pc);
 	assign MEM_WB_EN = ~hlt;
 
 	assign rst_n_IF_ID = rst_n & ~PCSrc_MEM_IF;
-	assign rst_n_ID_EX = rst_n;
+	assign rst_n_ID_EX = rst_n & ~PCSrc_MEM_IF;
 	assign rst_n_EX_MEM = rst_n;
 	assign rst_n_MEM_WB = rst_n;
 
@@ -176,12 +176,7 @@ EX EX(
   .aluResult(aluResult_EX_FF),
   .flags(newFlags),
   .targetAddr(targetAddr_EX_FF),
-	.flagsIn(currentFlags),
-
-  .branchOp(branchOp_EX_FF),
-  .sawBr(sawBr_EX_FF),
-  .PCSrc(PCSrc_EX_FF),
-  .sawJ(sawJ_EX_FF)
+	.flagsIn(currentFlags)
 );
 
 assign useNew = (setFlags_FF_EX & ~LW_Stall);
@@ -191,16 +186,14 @@ assign wrReg_EX_FF = wrReg_FF_EX;
 assign memRd_EX_FF = memRd_FF_EX;
 assign memWr_EX_FF = memWr_FF_EX;
 assign mem2reg_EX_FF = mem2reg_FF_EX;
+assign sawBr_EX_FF = sawBr_FF_EX;
+assign sawJ_EX_FF = sawJ_FF_EX;
 assign hlt_EX_FF = hlt_FF_EX;
 assign wrRegEn_EX_FF = wrRegEn_FF_EX;
 assign reg2_EX_FF = reg2_FF_EX;
+assign branchOp_EX_FF = instr_FF_EX[11:9];
 assign pc_EX_FF = pc_FF_EX;
 assign instr_EX_FF = instr_FF_EX;
-
-
-assign sawBr_EX_FF = sawBr_FF_EX;
-assign sawJ_EX_FF = sawJ_FF_EX;
-assign branchOp_EX_FF = instr_FF_EX[11:9];
 
 ////////////////////////////////////////////////// EX/MEM flops ///////////////////////////////////////////////////////
 dff_16 ff20(.q(aluResult_FF_MEM), .d(aluResult_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
@@ -210,15 +203,14 @@ dff_16 ff39(.q(pc_FF_MEM), .d(pc_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .
 dff_16 ff42(.q(instr_FF_MEM), .d(instr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff_4  ff23(.q(wrReg_FF_MEM), .d(wrReg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff_3  ff24(.q(flags_FF_MEM), .d(flags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
+dff_3  ff25(.q(branchOp_FF_MEM), .d(branchOp_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff26(.q(memRd_FF_MEM), .d(memRd_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff27(.q(memWr_FF_MEM), .d(memWr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff28(.q(mem2reg_FF_MEM), .d(mem2reg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
-dff    ff31(.q(hlt_FF_MEM), .d(hlt_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
-dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
-
-dff_3  ff25(.q(branchOp_FF_MEM), .d(branchOp_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff29(.q(sawBr_FF_MEM), .d(sawBr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff    ff30(.q(sawJ_FF_MEM), .d(sawJ_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
+dff    ff31(.q(hlt_FF_MEM), .d(hlt_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
+dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 
 
 MEM MEM(
@@ -228,13 +220,11 @@ MEM MEM(
   .wrData(reg2_FF_MEM),
   .memWr(memWr_FF_MEM),
   .memRd(memRd_FF_MEM),
-
   .branchOp(branchOp_FF_MEM),
   .sawBr(sawBr_FF_MEM),
   .sawJ(sawJ_FF_MEM),
-  .PCSrc(PCSrc_MEM_IF),
-
-  .rdData(rdData_MEM_FF)
+  .rdData(rdData_MEM_FF),
+  .PCSrc(PCSrc_MEM_IF)
 );
 
 ////////////////////////////////////////////// MEM/WB passthrough /////////////////////////////////////////////////////

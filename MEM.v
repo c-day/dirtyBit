@@ -20,10 +20,6 @@ module MEM(
 
   wire N, Z, V, cmp;
 
-
-
-
-/*
   assign N = flags[2];
   assign Z = flags[1];
   assign V = flags[0];
@@ -39,11 +35,6 @@ module MEM(
                  1'b0;
 
   assign PCSrc = (sawBr & cmp) | sawJ;
-
-*/
-
-
-
 
   DM DM(.clk(clk), .addr(memAddr), .re(memRd), .we(memWr), .wrt_data(wrData), .rd_data(rdData));
 
