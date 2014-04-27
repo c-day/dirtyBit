@@ -27,7 +27,7 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
-				pcStallHlt, PCSrc_MEM_IF, flag_EN, setFlags_ID_FF, setFlags_FF_EX;
+				pcStallHlt, PCSrc_MEM_IF, flag_EN, setFlags_ID_FF, setFlags_FF_EX, saveFlags;
 
 	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -44,7 +44,7 @@ module cpu(clk, rst_n, hlt, pc);
 	assign pcStallHlt = hlt | LW_Stall;
 
 ///////////////////////////////////////////////  global flags reg /////////////////////////////////////////////////////
-dff_3	gf(.q(globalFlags), .d(newFlags), .en(setFlags_FF_EX), .rst_n(rst_n), .clk(clk));															///
+dff_3	gf(.q(globalFlags), .d(newFlags), .en(saveFlags), .rst_n(rst_n), .clk(clk));															///
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -133,6 +133,8 @@ assign LW_Stall = (((reg1hazSel == `FWD_FROM_EX) | (reg2hazSel == `FWD_FROM_EX))
 
 dff stallTrack(.q(oldStall), .d(LW_Stall), .en(1'b1), .rst_n(1'b1), .clk(clk));
 
+//assign wrRegEn_ID_FF = (instr_FF_EX == `ADDZ) ? (wrRegEn_FF_EX & globalFlags[1]) : wrRegEn_FF_EX;
+
 /////////////////////////////////////////////// ID/EX passthrough /////////////////////////////////////////////////////
 assign pc_ID_FF = pc_FF_ID;
 
@@ -181,7 +183,9 @@ EX EX(
   .targetAddr(targetAddr_EX_FF)
 );
 
-assign wrRegEn_EX_FF = (instr_FF_EX == `ADDZ) ? (wrRegEn_FF_EX & globalFlags[1]) : wrRegEn_FF_EX;
+assign saveFlags = setFlags_FF_EX & ~LW_Stall;
+
+//assign wrRegEn_EX_FF = (instr_FF_EX == `ADDZ) ? (wrRegEn_FF_EX & globalFlags[1]) : wrRegEn_FF_EX;
 
 ////////////////////////////////////////////// EX/MEM passthrough /////////////////////////////////////////////////////
 assign wrReg_EX_FF = wrReg_FF_EX;
@@ -191,7 +195,7 @@ assign mem2reg_EX_FF = mem2reg_FF_EX;
 assign sawBr_EX_FF = sawBr_FF_EX;
 assign sawJ_EX_FF = sawJ_FF_EX;
 assign hlt_EX_FF = hlt_FF_EX;
-//assign wrRegEn_EX_FF = wrRegEn_FF_EX;
+assign wrRegEn_EX_FF = wrRegEn_FF_EX;
 assign reg2_EX_FF = reg2_FF_EX;
 assign branchOp_EX_FF = instr_FF_EX[11:9];
 assign pc_EX_FF = pc_FF_EX;
