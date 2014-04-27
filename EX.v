@@ -30,7 +30,7 @@ module EX(
   
   assign offset = (instr[15:12] == `B) ? {{7{instr[8]}}, instr[8:0]} : {{4{instr[11]}}, instr[11:0]};
 
-  assign targetAddr = aluResult;//(instr[15:12] == `JR) ? aluResult : pc + offset + 1;
+  assign targetAddr = (instr[15:12] != `JAL) ? aluResult : pc + offset + 1;
 
 	assign input1 = (instr[15:12] == `B) ? pc + 1 : reg1;
 	assign input2 = (instr[15:12] == `B) ? offset : src1;
