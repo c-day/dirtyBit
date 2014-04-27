@@ -37,7 +37,7 @@ module control(
                     (opCode == `SUB) ? 1'b1 :
                     (opCode == `AND) ? 1'b1 :
                     (opCode == `NOR) ? 1'b1 :
-										//(opCode == `JR ) ? 1'b1 :
+										(opCode == `JR ) ? 1'b1 :
 										(opCode == `SW ) ? 1'b1 :
                     1'b0;
 
@@ -93,6 +93,7 @@ module control(
                  (opCode == `LW ) ? `ALU_ADD :
 								 (opCode == `SW ) ? `ALU_ADD :
 								 (opCode == `JR ) ? `ALU_ADD :
+								 (opCode == `B  ) ? `ALU_ADD :
                  `ALU_NOP;
 
   assign shAmt = instr[3:0];

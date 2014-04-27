@@ -24,13 +24,17 @@ module EX(
 
   wire [15:0] src1;
   wire [15:0] offset;
+  wire [15:0] input1, input2;
   
   assign src1 = (aluSrc == 1'b1) ? reg2 : sextIn;
   
-  assign offset = (instr[15:12] == `B) ? {{6{instr[8]}}, instr[8:0]} : {{4{instr[11]}}, instr[11:0]};
+  assign offset = (instr[15:12] == `B) ? {{7{instr[8]}}, instr[8:0]} : {{4{instr[11]}}, instr[11:0]};
 
-  assign targetAddr = (instr[15:12] == `JR) ? aluResult : pc + offset + 1;
+  assign targetAddr = aluResult;//(instr[15:12] == `JR) ? aluResult : pc + offset + 1;
 
-  ALU ALU(.dst(aluResult), .V(flags[0]), .Z(flags[1]), .N(flags[2]), .src0(reg1), .src1(src1), .aluOp(aluOp), .shAmt(shAmt), .flagsIn(flagsIn), .instr(instr));
+	assign input1 = (instr[15:12] == `B) ? pc + 1 : reg1;
+	assign input2 = (instr[15:12] == `B) ? offset : src1;
+
+  ALU ALU(.dst(aluResult), .V(flags[0]), .Z(flags[1]), .N(flags[2]), .src0(input1), .src1(input2), .aluOp(aluOp), .shAmt(shAmt), .flagsIn(flagsIn), .instr(instr));
 
 endmodule
