@@ -16,16 +16,27 @@ module control(
   sawJ,
   aluSrc,
   hlt, 
-	Z
+	Z,
+	setFlagsInstr
 );
   input [15:0] instr;
 	input Z;
-  output rdEnReg1, rdEnReg2, wrRegEn, memRd, memWr, mem2reg, sawBr, sawJ, aluSrc, hlt;
+  output rdEnReg1, rdEnReg2, wrRegEn, memRd, memWr, mem2reg, sawBr, sawJ, aluSrc, hlt, setFlagsInstr;
   output [3:0] rdReg1, rdReg2, wrReg, aluOp, shAmt;
 
   wire [3:0] opCode = instr[15:12];
 
 	assign hlt = (opCode == `HLT) ? 1'b1 : 1'b0;
+
+	assign setFlagsInstr = (opCode == `ADD) ? 1'b1 :
+												 (opCode == `ADDZ) ? 1'b1 : 
+												 (opCode == `SUB) ? 1'b1 :
+												 (opCode == `AND) ? 1'b1 :
+												 (opCode == `NOR) ? 1'b1 :
+												 (opCode == `SLL) ? 1'b1 :
+												 (opCode == `SRL) ? 1'b1 :
+												 (opCode == `SRA) ? 1'b1 :
+												 1'b0;
 
   assign rdEnReg1 = (opCode == `HLT) ? 1'b0 :
                     (opCode == `B  ) ? 1'b0 :
