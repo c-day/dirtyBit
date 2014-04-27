@@ -1,9 +1,8 @@
 `include "defines.v"
-module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn);
+module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt);
   input [15:0] src0, src1;
 	input [3:0] aluOp;
 	input [3:0] shAmt;
-	input [2:0] flagsIn;
 	output [15:0] dst;
 	output V, Z, N;
 	
@@ -65,15 +64,15 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn);
 						 (aluOp == `ALU_SLL) ? tempZ :
 						 (aluOp == `ALU_SRL) ? tempZ :
 						 (aluOp == `ALU_SRA) ? tempZ :
-						 flagsIn[1];
+						 Z;
 						 
 	assign V = (aluOp == `ALU_ADD) ? tempV :
 	           (aluOp == `ALU_SUB) ? tempV :
-	           flagsIn[2];
+	           V;
 	           
 	assign N = (aluOp == `ALU_ADD) ? tempN :
 	           (aluOp == `ALU_SUB) ? tempN :
-	           flagsIn[0];
+	           N;
 	           
 endmodule
 
