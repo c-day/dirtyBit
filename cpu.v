@@ -124,10 +124,14 @@ dff stallTrack(.q(oldStall), .d(LW_Stall), .en(1'b1), .rst_n(1'b1), .clk(clk));
 /////////////////////////////////////////////// ID/EX passthrough /////////////////////////////////////////////////////
 assign pc_ID_FF = pc_FF_ID;
 
+dff  lastWrRegEnFF(.q(lastWrRegEn), .d(wrRegEn_ID_FF), .en(1'b1), .rst_n(1'b1), .clk(clk));
+
 /////////////////////////////////////////// No-op injection on stall //////////////////////////////////////////////////
 assign memRd_MUX_FF 	= (LW_Stall) ? 1'b0 : memRd_ID_FF;
 assign memWr_MUX_FF		= (LW_Stall) ? 1'b0 : memWr_ID_FF;
-assign wrRegEn_MUX_FF = (LW_Stall) ? 1'b0 : wrRegEn_ID_FF;
+assign wrRegEn_MUX_FF = (LW_Stall) ? 1'b0 : 
+														(oldStall) ? lastWrRegEn : wrRegEn_ID_FF;
+//dff    idk(.q(wrRegEn_MUX_FF), .d(wrRegEn_ID_FF), .en(~LW_Stall), .rst_n(1'b1), .clk(clk));
 assign wrReg_MUX_FF		= (LW_Stall) ? 4'h0 : wrReg_ID_FF;
 
 //////////////////////////////////////////////////  ID/EX flops ///////////////////////////////////////////////////////

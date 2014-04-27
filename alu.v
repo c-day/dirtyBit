@@ -1,6 +1,6 @@
 `include "defines.v"
-module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn);
-  input [15:0] src0, src1;
+module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
+  input [15:0] src0, src1, instr;
 	input [3:0] aluOp;
 	input [3:0] shAmt;
 	input [2:0] flagsIn;
@@ -13,8 +13,11 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn);
 	wire [15:0] realSra;
 	
 	wire [15:0] twosSrc1;
+	wire [3:0] opCode;
 	
 	assign twosSrc1 = (~src1+1);
+
+	assign opCode = instr[15:12];
 	
 	sraFix sra(realSra, src0, shAmt); 
 	
@@ -58,8 +61,10 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn);
   assign tempN = dst[15];
                
   //set the zero flag if all bits are zero
-  assign Z = (aluOp == `ALU_ADD) ? tempZ :
-					  	(aluOp == `ALU_SUB) ? tempZ :
+  assign Z = (aluOp == `ALU_ADD) ? //tempZ :
+								(opCode == `LW) ? flagsIn[1] : 
+								(opCode == `SW) ? flagsIn[1] : tempZ :
+					   (aluOp == `ALU_SUB) ? tempZ :
 						 (aluOp == `ALU_AND) ? tempZ :
 						 (aluOp == `ALU_NOR) ? tempZ :
 						 (aluOp == `ALU_SLL) ? tempZ :

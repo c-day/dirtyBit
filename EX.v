@@ -31,6 +31,6 @@ module EX(
 
   assign targetAddr = (instr[15:12] == `JR) ? aluResult : pc + offset + 1;
 
-  ALU ALU(.dst(aluResult), .V(flags[0]), .Z(flags[1]), .N(flags[2]), .src0(reg1), .src1(src1), .aluOp(aluOp), .shAmt(shAmt), .flagsIn(flagsIn));
+  ALU ALU(.dst(aluResult), .V(flags[0]), .Z(flags[1]), .N(flags[2]), .src0(reg1), .src1(src1), .aluOp(aluOp), .shAmt(shAmt), .flagsIn(flagsIn), .instr(instr));
 
 endmodule
