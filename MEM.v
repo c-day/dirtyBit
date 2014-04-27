@@ -17,7 +17,7 @@ module MEM(
   input memWr, memRd, clk, sawBr, sawJ;
   output [15:0] rdData;
   output PCSrc;
-/*
+
   wire N, Z, V, cmp;
 
   assign N = flags[2];
@@ -35,7 +35,7 @@ module MEM(
                  1'b0;
 
   assign PCSrc = (sawBr & cmp) | sawJ;
-*/
+
   DM DM(.clk(clk), .addr(memAddr), .re(memRd), .we(memWr), .wrt_data(wrData), .rd_data(rdData));
 
 endmodule

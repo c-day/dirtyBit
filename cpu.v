@@ -4,9 +4,9 @@ module cpu(clk, rst_n, hlt, pc);
   output hlt;
 	output [15:0] pc;
 
-  wire [2:0] flags_EX_FF, branchOp_EX_FF, branchOp_FF_MEM, flags_FF_MEM, newFlags, currentFlags;
+  wire [2:0] flags_EX_FF, branchOp_EX_FF, branchOp_FF_MEM, flags_FF_MEM, newFlags;//, currentFlags;
 
-//	reg [2:0] currentFlags;
+	reg [2:0] currentFlags;
 
   wire [15:0] FWD_reg1, FWD_reg2;
 
@@ -29,7 +29,7 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
-				pcStallHlt, PCSrc_MEM_IF, useNew, PCSrc_EX_IF;
+				pcStallHlt, PCSrc_MEM_IF, useNew;
 
 	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -46,22 +46,21 @@ module cpu(clk, rst_n, hlt, pc);
 	assign pcStallHlt = hlt | LW_Stall;
 
 
-	dff_3  gf(.q(currentFlags), .d(newFlags), .en(useNew), .rst_n(rst_n), .clk(clk));
-/*
+	//dff_3  gf(.q(currentFlags), .d(newFlags), .en(useNew), .rst_n(rst_n), .clk(clk));
 	always @(newFlags, useNew) begin
 		if(useNew == 1'b1)
 				currentFlags = newFlags;
 		else
 				currentFlags = currentFlags;
 	end
-*/
+
 
 IF IF(
   .clk(clk),
   .hlt(pcStallHlt),
   .nRst(rst_n),
-  .altAddress(targetAddr_EX_FF),
-  .useAlt(PCSrc_EX_IF),
+  .altAddress(targetAddr_FF_MEM),
+  .useAlt(PCSrc_MEM_IF),
   .pc(pc_IF_FF),
   .instr(instr_IF_FF)
 );
@@ -177,8 +176,7 @@ EX EX(
   .aluResult(aluResult_EX_FF),
   .flags(newFlags),
   .targetAddr(targetAddr_EX_FF),
-	.flagsIn(currentFlags),
-	.PCSrc(PCSrc_EX_IF)
+	.flagsIn(currentFlags)
 );
 
 assign useNew = (setFlags_FF_EX & ~LW_Stall);
