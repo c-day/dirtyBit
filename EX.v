@@ -11,7 +11,8 @@ module EX(
   aluResult,
   flags,
   targetAddr, 
-	flagsIn
+	flagsIn,
+	PCSrc
 );
 
   input [15:0] pc, instr, reg1, reg2;
@@ -21,9 +22,33 @@ module EX(
 	input aluSrc;
   output [15:0] aluResult, targetAddr;
   output [2:0] flags;
+	output PCSrc;
 
   wire [15:0] src1;
   wire [15:0] offset;
+
+
+  wire N, Z, V, cmp;
+	wire [2:0] branchOp;
+
+	assign branchOp = instr[11:9];
+
+  assign N = flagsIn[2];
+  assign Z = flagsIn[1];
+  assign V = flagsIn[0];
+
+  assign cmp = (branchOp == `BNEQ & Z == 1'b0) ? 1'b1 :
+                 (branchOp == `BEQ & Z == 1'b1) ? 1'b1 :
+                 (branchOp == `BGT & Z == 1'b0 & N == 1'b0) ? 1'b1 :
+                 (branchOp == `BLT & N == 1'b1) ? 1'b1 :
+                 (branchOp == `BGTE & N == 1'b0) ? 1'b1 :
+                 (branchOp == `BLTE & (N == 1'b1 | Z == 1'b1)) ? 1'b1 :
+                 (branchOp == `BOVFL & V == 1'b1) ? 1'b1 :
+                 (branchOp == `BUNCOND) ? 1'b1 :
+                 1'b0;
+
+  assign PCSrc = ((instr[15:12] == `B) & cmp) | (instr[15:12] == `JAL | instr[15:12] == `JR);
+
   
   assign src1 = (aluSrc == 1'b1) ? reg2 : sextIn;
   
