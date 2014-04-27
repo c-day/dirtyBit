@@ -4,9 +4,7 @@ module cpu(clk, rst_n, hlt, pc);
   output hlt;
 	output [15:0] pc;
 
-  wire [2:0] flags_EX_FF, branchOp_EX_FF, branchOp_FF_MEM, flags_FF_MEM, newFlags;//, currentFlags;
-
-	reg [2:0] currentFlags;
+  wire [2:0] flags_EX_FF, branchOp_EX_FF, branchOp_FF_MEM, flags_FF_MEM;
 
   wire [15:0] FWD_reg1, FWD_reg2;
 
@@ -29,7 +27,7 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
-				pcStallHlt, PCSrc_MEM_IF, useNew;
+				pcStallHlt, PCSrc_MEM_IF;
 
 	assign IF_ID_EN = ~(hlt | LW_Stall);
 	assign ID_EX_EN = ~hlt_FF_EX;
@@ -44,16 +42,6 @@ module cpu(clk, rst_n, hlt, pc);
 	assign pc = pc_FF_WB + 1;
 
 	assign pcStallHlt = hlt | LW_Stall;
-
-
-	//dff_3  gf(.q(currentFlags), .d(newFlags), .en(useNew), .rst_n(rst_n), .clk(clk));
-	always @(newFlags, useNew) begin
-		if(useNew == 1'b1)
-				currentFlags = newFlags;
-		else
-				currentFlags = currentFlags;
-	end
-
 
 IF IF(
   .clk(clk),
@@ -78,7 +66,7 @@ ID ID(
   .i_wrReg(wrReg_FF_WB),
   .i_wrData(wrData_WB_ID),
   .i_wrEn(wrRegEn_FF_WB),
-	.i_Z(currentFlags[1]),
+	.i_Z(flags_EX_FF[1]),
   .o_port0(reg1_ID_FF),
   .o_port1(reg2_ID_FF),
   .o_sext(sext_ID_FF),
@@ -97,8 +85,7 @@ ID ID(
   .o_hlt(hlt_ID_FF),
   .o_wrRegEn(wrRegEn_ID_FF),
 	.o_rdReg1En(rdReg1En_ID),
-	.o_rdReg2En(rdReg2En_ID),
-	.o_setFlagsInstr(setFlags_ID_FF)
+	.o_rdReg2En(rdReg2En_ID)
 );
 
 hzdDet hzd(
@@ -162,7 +149,6 @@ dff    ff16(.q(sawJ_FF_EX), .d(sawJ_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), 
 dff    ff17(.q(aluSrc_FF_EX), .d(aluSrc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff18(.q(hlt_FF_EX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
-dff    ff43(.q(setFlags_FF_EX), .d(setFlags_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 
 EX EX(
   .pc(pc_FF_EX),
@@ -174,12 +160,10 @@ EX EX(
   .aluOp(aluOp_FF_EX),
   .shAmt(shAmt_FF_EX),
   .aluResult(aluResult_EX_FF),
-  .flags(newFlags),
+  .flags(flags_EX_FF),
   .targetAddr(targetAddr_EX_FF),
-	.flagsIn(currentFlags)
+	.flagsIn(flags_FF_MEM)
 );
-
-assign useNew = (setFlags_FF_EX & ~LW_Stall);
 
 ////////////////////////////////////////////// EX/MEM passthrough /////////////////////////////////////////////////////
 assign wrReg_EX_FF = wrReg_FF_EX;
@@ -216,7 +200,7 @@ dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_
 MEM MEM(
   .clk(clk),
   .memAddr(aluResult_FF_MEM),
-  .flags(currentFlags),
+  .flags(flags_FF_MEM),
   .wrData(reg2_FF_MEM),
   .memWr(memWr_FF_MEM),
   .memRd(memRd_FF_MEM),
