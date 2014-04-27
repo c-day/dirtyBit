@@ -16,23 +16,14 @@ module control(
   sawJ,
   aluSrc,
   hlt, 
-	setFlags
+	Z
 );
   input [15:0] instr;
-	output rdEnReg1, rdEnReg2, wrRegEn, memRd, memWr, mem2reg, sawBr, sawJ, aluSrc, hlt, setFlags;
+	input Z;
+  output rdEnReg1, rdEnReg2, wrRegEn, memRd, memWr, mem2reg, sawBr, sawJ, aluSrc, hlt;
   output [3:0] rdReg1, rdReg2, wrReg, aluOp, shAmt;
 
   wire [3:0] opCode = instr[15:12];
-
-	assign setFlags = (opCode == `ADD) ? 1'b1 :
-                    (opCode == `ADDZ) ? 1'b1 :
-                    (opCode == `SUB) ? 1'b1 :
-                    (opCode == `AND) ? 1'b1 :
-                    (opCode == `NOR) ? 1'b1 :
-										(opCode == `SLL) ? 1'b1 :
-										(opCode == `SRL) ? 1'b1 :
-										(opCode == `SRA) ? 1'b1 :
-										1'b0;
 
 	assign hlt = (opCode == `HLT) ? 1'b1 : 1'b0;
 
@@ -54,7 +45,8 @@ module control(
                    (opCode == `SW ) ? 1'b0 :
                    (opCode == `B  ) ? 1'b0 :
                    (opCode == `JR ) ? 1'b0 :
-									 1'b1;
+									 (opCode == `ADDZ & Z == 1'b0) ? 1'b0 :
+                   1'b1;
 
   assign memRd = (opCode == `LW) ? 1'b1 : 1'b0;
 
