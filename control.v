@@ -45,7 +45,7 @@ module control(
                    (opCode == `SW ) ? 1'b0 :
                    (opCode == `B  ) ? 1'b0 :
                    (opCode == `JR ) ? 1'b0 :
-									 ((opCode == `ADDZ) & (Z == 1'b0)) ? 1'b0 :
+									 (opCode == `ADDZ & Z == 1'b0) ? 1'b0 :
                    1'b1;
 
   assign memRd = (opCode == `LW) ? 1'b1 : 1'b0;

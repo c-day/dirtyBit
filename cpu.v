@@ -161,8 +161,7 @@ EX EX(
   .shAmt(shAmt_FF_EX),
   .aluResult(aluResult_EX_FF),
   .flags(flags_EX_FF),
-  .targetAddr(targetAddr_EX_FF),
-	.flagsIn(flags_FF_MEM)
+  .targetAddr(targetAddr_EX_FF)
 );
 
 ////////////////////////////////////////////// EX/MEM passthrough /////////////////////////////////////////////////////
