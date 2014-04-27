@@ -37,6 +37,11 @@ module control(
 												 (opCode == `SRL) ? 1'b1 :
 												 (opCode == `SRA) ? 1'b1 :
 												 1'b0;
+always@(*) begin
+	$display("\n\n=======================");
+	$display("OpCode = %b", opCode);
+	$display("OpCodesetFlagsInstr = %b", setFlagsInstr);
+end
 
   assign rdEnReg1 = (opCode == `HLT) ? 1'b0 :
                     (opCode == `B  ) ? 1'b0 :
