@@ -63,6 +63,7 @@ module control(
 
   assign rdReg1 = (opCode == `LHB) ? instr[11:8] :
                   (opCode == `LLB) ? 4'h0 :
+									(opCode == `JAL) ? 4'h0 :
 									instr[7:4];
 
   assign rdReg2 = (opCode == `SW) ? instr[11:8] : 
@@ -80,7 +81,7 @@ module control(
   assign aluSrc = (opCode == `LLB) ? 1'b0 : 
                   (opCode == `SW ) ? 1'b0 :
 									(opCode == `JR ) ? 1'b1 :
-									//(opCode == `JAL) ? 1'b0 :
+									(opCode == `JAL) ? 1'b0 :
                   rdEnReg2;
 
   assign aluOp = (opCode == `ADD) ? `ALU_ADD :
@@ -97,7 +98,7 @@ module control(
 								 (opCode == `SW ) ? `ALU_ADD :
 								 (opCode == `JR ) ? `ALU_ADD :
 								 (opCode == `B  ) ? `ALU_ADD :
-								 //(opCode == `JAL) ? `ALU_ADD :
+								 (opCode == `JAL) ? `ALU_ADD :
                  `ALU_NOP;
 
   assign shAmt = instr[3:0];

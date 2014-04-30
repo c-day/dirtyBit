@@ -62,7 +62,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
                
   //set the zero flag if all bits are zero
   assign Z = (aluOp == `ALU_ADD) ? //tempZ :
-								//(opCode == `JAL) ? flagsIn[1] :
+								(opCode == `JAL) ? flagsIn[1] :
 								(opCode == `JR) ? flagsIn[1] :
 								(opCode == `LLB) ? flagsIn[1] :
 								(opCode == `LW) ? flagsIn[1] : 
@@ -77,7 +77,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 						 flagsIn[1];
 						 
 	assign V = (aluOp == `ALU_ADD) ? //tempV :
-								//(opCode == `JAL) ? flagsIn[2] :
+								(opCode == `JAL) ? flagsIn[2] :
 								(opCode == `JR) ? flagsIn[2] :
 								(opCode == `LLB) ? flagsIn[2] :
 								(opCode == `LW) ? flagsIn[2] : 
@@ -87,7 +87,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 	           flagsIn[2];
 	           
 	assign N = (aluOp == `ALU_ADD) ? //tempN :
-								//(opCode == `JAL) ? flagsIn[0] :
+								(opCode == `JAL) ? flagsIn[0] :
 								(opCode == `JR) ? flagsIn[0] :
 								(opCode == `LLB) ? flagsIn[0] :
 								(opCode == `LW) ? flagsIn[0] : 
