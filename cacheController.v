@@ -15,7 +15,7 @@ reg state, nextState;
 reg mem_rd, mem_wr, icache_we;
 reg [13:0] mem_addr;
 
-assign fullLine = (mem_rdy == 1'b1) ? mem_data : i_fullLine;
+assign fullLine = (i_hit == 1'b0 & mem_rdy == 1'b1) ? mem_data : i_fullLine;
 
 /////////////////////////////////////////  Mux iCache output //////////////////////////////////////
 assign instr =	(i_addr[1:0] == 2'b00) ? fullLine[15:0]  :
@@ -71,7 +71,7 @@ always @(*) begin
 	endcase
 end
 
-/******************************* Instruction Cache, always read, never write, leave tag and dirty disconnected *************************/
+/******************************* Instruction Cache, always read, never dirty, leave tag and dirty disconnected *************************/
 cache icache(.clk(clk), .rst_n(rst_n), .addr(i_addr[15:2]), .wr_data(mem_data), .wdirty(1'b0), .we(icache_we), .re(1'b1), .rd_data(i_fullLine), .tag_out(), .hit(i_hit), .dirty());
 
 /************************************************************* Unified Memory **********************************************************/
