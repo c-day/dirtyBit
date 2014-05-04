@@ -57,17 +57,15 @@ wire [15:0] cacheI;
 
 cacheController cacheCtrl(.instr(cacheI), .instr_rdy(instr_rdy), .i_addr(pc_IF_FF), .clk(clk), .rst_n(rst_n));
 
-always @(instr_rdy) begin
-	if(instr_rdy) begin
-		if(cacheI != instr_IF_FF)
-			$display("ERROR - cache instr: %h\treal instr: %h", cacheI, instr_IF_FF);
-	end
-end
-
 //////////////////////////////////////////////////  IF/ID flops ///////////////////////////////////////////////////////
 dff_16 ff00(.q(pc_FF_ID), .d(pc_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
-dff_instr ff01(.q(instr_FF_ID), .d(instr_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
-dff_16  icache(.q(cacheIout), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
+dff_instr ff01(.q(instr_FF_ID), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
+dff_instr  icache(.q(cacheIout), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
+
+always @(instr_FF_ID) begin
+	if(cacheIout != instr_FF_ID)
+		$display("ERROR - cache instr: %h\treal instr: %h", cacheIout, instr_FF_ID);
+end
 
 ID ID(
   .i_clk(clk),

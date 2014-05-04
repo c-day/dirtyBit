@@ -12,10 +12,12 @@ wire i_hit, mem_rdy;
 
 reg state, nextState;
 
-reg mem_rd, mem_wr, icache_we;
-reg [13:0] mem_addr;
+reg mem_rd, mem_wr, icache_we, use_mem;
+wire [13:0] mem_addr;
 
-assign fullLine = (i_hit == 1'b0 & mem_rdy == 1'b1) ? mem_data : i_fullLine;
+assign fullLine = (use_mem == 1'b1) ? mem_data : i_fullLine;
+
+assign mem_addr = i_addr[15:2];
 
 /////////////////////////////////////////  Mux iCache output //////////////////////////////////////
 assign instr =	(i_addr[1:0] == 2'b00) ? fullLine[15:0]  :
@@ -33,20 +35,24 @@ always @(posedge clk)
 
 ////////////////////////////////////////// iCache controlling SM //////////////////////////////////
 always @(*) begin
-	nextState = IDLE;
-	mem_addr = i_addr[15:2];
-	instr_rdy = 1'b0;
-	mem_rd = 1'b0;
+	//nextState = IDLE;
+	//mem_addr = i_addr[15:2];
+	//instr_rdy = 1'b0;
+	//mem_rd = 1'b0;
+	//use_mem = 1'b0;
 
 	case (state)
 
 		IDLE: begin
+			icache_we = 1'b0;
+			use_mem = 1'b0;
 			if (i_hit == 1'b0) begin //cache miss 
 				instr_rdy = 1'b0;
 				mem_rd = 1'b1;
 				nextState = INSTR_RD;
 			end else begin  //cache hit
 				instr_rdy = 1'b1;
+				mem_rd = 1'b0;
 				nextState = IDLE;
 			end 
 		end
@@ -56,9 +62,13 @@ always @(*) begin
 				icache_we = 1'b1;
 				mem_rd = 1'b0;
 				instr_rdy = 1'b1;
+				use_mem = 1'b1;
 				nextState = IDLE;
 			end else begin
+				instr_rdy = 1'b0;
 				mem_rd = 1'b1;
+				icache_we = 1'b0;
+				use_mem = 1'b0;
 				nextState = INSTR_RD;
 			end
 
