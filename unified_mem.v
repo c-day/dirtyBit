@@ -11,7 +11,7 @@ input [13:0] addr;				// 2 LSB's are dropped since accessing as four 16-bit word
 input [63:0] wdata;
 
 output reg [63:0] rd_data;
-output reg rdy;					// deasserted when memory operation completed
+output reg rdy;					// asserted when memory operation completed
 
 reg [15:0]mem[0:65535];			// entire memory space at 16-bits wide
 

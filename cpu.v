@@ -12,7 +12,8 @@ module cpu(clk, rst_n, hlt, pc);
               sext_FF_EX, sext_ID_FF, aluResult_EX_FF, aluResult_FF_MEM, targetAddr_EX_FF,
               targetAddr_FF_MEM, rdData_MEM_FF, rdData_FF_WB, aluResult_MEM_FF, aluResult_FF_WB,
               wrData_WB_ID, reg1_ID_FF, reg1_FF_EX, reg2_ID_FF, reg2_FF_EX, reg2_EX_FF, reg2_FF_MEM,
-							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF;
+							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF,
+							cacheData, myWire, asdf;
 
   wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_MUX_FF,
               wrReg_EX_FF, wrReg_FF_MEM, wrReg_MEM_FF, wrReg_FF_WB, aluOp_ID_FF, aluOp_FF_EX,
@@ -27,12 +28,12 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
-				pcStallHlt, PCSrc_MEM_IF, instr_rdy;
+				pcStallHlt, PCSrc_MEM_IF, instr_rdy, data_rdy;
 
-	assign IF_ID_EN = ~(hlt | LW_Stall | ~instr_rdy);
-	assign ID_EX_EN = ~(hlt_FF_EX | ~instr_rdy);
-	assign EX_MEM_EN = ~(hlt_FF_MEM | ~instr_rdy);
-	assign MEM_WB_EN = ~(hlt | ~instr_rdy);
+	assign IF_ID_EN = ~(hlt | LW_Stall | ~instr_rdy | ~data_rdy);
+	assign ID_EX_EN = ~(hlt_FF_EX | ~instr_rdy | ~data_rdy);
+	assign EX_MEM_EN = ~(hlt_FF_MEM | ~instr_rdy | ~data_rdy);
+	assign MEM_WB_EN = ~(hlt | ~instr_rdy | ~data_rdy);
 
 	assign rst_n_IF_ID = rst_n & ~PCSrc_MEM_IF;
 	assign rst_n_ID_EX = rst_n & ~PCSrc_MEM_IF;
@@ -55,12 +56,15 @@ IF IF(
 
 wire [15:0] cacheI;
 
-cacheController cacheCtrl(.instr(cacheI), .instr_rdy(instr_rdy), .i_addr(pc_IF_FF), .clk(clk), .rst_n(rst_n));
+
+cacheControl cc(.data(cacheData), .instr(cacheI), .i_rdy(instr_rdy), .d_rdy(data_rdy), .i_addr(pc_IF_FF), .d_addr(aluResult_FF_MEM), .data_rd(memRd_FF_MEM), .data_wr(memWr_FF_MEM), .clk(clk), .rst_n(rst_n));
+cacheController cacheCtrl(.instr(myWire), .instr_rdy(), .i_addr(pc_IF_FF), .clk(clk), .rst_n(rst_n));
 
 //////////////////////////////////////////////////  IF/ID flops ///////////////////////////////////////////////////////
 dff_16 ff00(.q(pc_FF_ID), .d(pc_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
-dff_instr ff01(.q(instr_FF_ID), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
+dff_instr ff01(.q(instr_FF_ID), .d(instr_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 dff_instr  icache(.q(cacheIout), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
+dff_instr  ic(.q(asdf), .d(myWire), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 
 always @(instr_FF_ID) begin
 	if(cacheIout != instr_FF_ID)

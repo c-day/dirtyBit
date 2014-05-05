@@ -42,3 +42,9 @@
 `define FWD_FROM_EX		2'b01
 `define FWD_FROM_MEM	2'b10
 `define FWD_FROM_WB		2'b11
+
+//Cache control states
+`define IDLE					2'b00
+`define INSTR_RD			2'b01
+`define EVICT					2'b10
+`define DATA_RD				2'b11
