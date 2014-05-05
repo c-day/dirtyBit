@@ -42,7 +42,7 @@ module cpu(clk, rst_n, hlt, pc);
 
 	assign pc = pc_FF_WB + 1;
 
-	assign pcStallHlt = hlt | LW_Stall | ~instr_rdy;
+	assign pcStallHlt = hlt | LW_Stall | ~instr_rdy;// | ~data_rdy;
 
 IF IF(
   .clk(clk),
@@ -57,7 +57,7 @@ IF IF(
 wire [15:0] cacheI;
 
 
-cacheControl cc(.data(cacheData), .instr(cacheI), .i_rdy(instr_rdy), .d_rdy(data_rdy), .i_addr(pc_IF_FF), .d_addr(aluResult_FF_MEM), .data_rd(memRd_FF_MEM), .data_wr(memWr_FF_MEM), .clk(clk), .rst_n(rst_n));
+cacheControl cc(.data(cacheData), .instr(cacheI), .i_rdy(instr_rdy), .d_rdy(data_rdy), .i_addr(pc_IF_FF), .d_addr(aluResult_FF_MEM), .wr_data(reg2_FF_MEM), .mem_rd(memRd_FF_MEM), .mem_wr(memWr_FF_MEM), .clk(clk), .rst_n(rst_n));
 cacheController cacheCtrl(.instr(myWire), .instr_rdy(), .i_addr(pc_IF_FF), .clk(clk), .rst_n(rst_n));
 
 //////////////////////////////////////////////////  IF/ID flops ///////////////////////////////////////////////////////
