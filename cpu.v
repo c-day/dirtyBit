@@ -13,7 +13,7 @@ module cpu(clk, rst_n, hlt, pc);
               targetAddr_FF_MEM, rdData_MEM_FF, rdData_FF_WB, aluResult_MEM_FF, aluResult_FF_WB,
               wrData_WB_ID, reg1_ID_FF, reg1_FF_EX, reg2_ID_FF, reg2_FF_EX, reg2_EX_FF, reg2_FF_MEM,
 							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF,
-							cacheData, myWire, asdf;
+							cacheData, cacheDout;
 
   wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_MUX_FF,
               wrReg_EX_FF, wrReg_FF_MEM, wrReg_MEM_FF, wrReg_FF_WB, aluOp_ID_FF, aluOp_FF_EX,
@@ -42,7 +42,7 @@ module cpu(clk, rst_n, hlt, pc);
 
 	assign pc = pc_FF_WB + 1;
 
-	assign pcStallHlt = hlt | LW_Stall | ~instr_rdy;// | ~data_rdy;
+	assign pcStallHlt = hlt | LW_Stall | ~instr_rdy | ~data_rdy;
 
 IF IF(
   .clk(clk),
@@ -58,13 +58,11 @@ wire [15:0] cacheI;
 
 
 cacheControl cc(.data(cacheData), .instr(cacheI), .i_rdy(instr_rdy), .d_rdy(data_rdy), .i_addr(pc_IF_FF), .d_addr(aluResult_FF_MEM), .wr_data(reg2_FF_MEM), .mem_rd(memRd_FF_MEM), .mem_wr(memWr_FF_MEM), .clk(clk), .rst_n(rst_n));
-cacheController cacheCtrl(.instr(myWire), .instr_rdy(), .i_addr(pc_IF_FF), .clk(clk), .rst_n(rst_n));
 
 //////////////////////////////////////////////////  IF/ID flops ///////////////////////////////////////////////////////
 dff_16 ff00(.q(pc_FF_ID), .d(pc_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 dff_instr ff01(.q(instr_FF_ID), .d(instr_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 dff_instr  icache(.q(cacheIout), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
-dff_instr  ic(.q(asdf), .d(myWire), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 
 always @(instr_FF_ID) begin
 	if(cacheIout != instr_FF_ID)
@@ -249,6 +247,7 @@ dff    ff37(.q(hlt), .d(hlt_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(
 dff    ff38(.q(wrRegEn_FF_WB), .d(wrRegEn_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 dff    ff41(.q(PCSrc_FF_WB), .d(PCSrc_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 
+dff_16 dc(.q(cacheDout), .d(cacheData), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 WB WB(
   .memData(rdData_FF_WB),
   .aluResult(aluResult_FF_WB),
