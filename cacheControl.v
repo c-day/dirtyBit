@@ -50,33 +50,49 @@ unified_mem umem(.clk(clk), .rst_n(rst_n), .addr(mem_addr), .re(uMem_rd), .we(uM
 always @(*) begin
 	case (state)
 		`IDLE: begin
-				if(((~mem_rd & ~mem_wr) | d_hit) & ~i_hit)
+				if(((~mem_rd & ~mem_wr) | d_hit) & ~i_hit) begin
+				  i_rdy = 1'b0;
+				  d_rdy = 1'b1;
+				  uMem_rd = 1'b1;
+				  mem_addr = i_addr[15:12];
 				  nextState = `INSTR_RD;
-				else if((mem_rd | mem_wr) & ~d_hit)
+				end else if((mem_rd | mem_wr) & ~d_hit) begin
+				  i_rdy = 1'b0;
+				  d_rdy = 1'b0;
 				  if(dirty)
 				    nextState = `EVICT;
 				  else
 				    nextState = `DATA_RD;
-				else
+				end else begin
+				  i_rdy = 1'b1;
+				  d_rdy = 1'b1;
 				  nextState = `IDLE;
+				end
 		end
 		`INSTR_RD: begin
-		  if(mem_rdy)
+		  if(mem_rdy) begin
+		    i_rdy = 1'b1;
 		    nextState = `IDLE;
-		  else
+		  end else begin
+		    i_rdy = 1'b0;
 		    nextState = `INSTR_RD;
+		  end
 		end
 		`EVICT: begin
-		  if(mem_rdy)
+		  if(mem_rdy) begin
 		    nextState = `DATA_RD;
-		  else
+		  end else begin
 		    nextState = `EVICT;
+		  end
 		end
 		`DATA_RD: begin
-			if(mem_rdy)
+			if(mem_rdy) begin
+			  d_rdy = 1'b1;
 			  nextState = `IDLE;
-			else
+			end else begin
+			  d_rdy = 1'b0;
 			  nextState = `DATA_RD;
+			end
 		end
 		default: 
 			nextState = `IDLE;
