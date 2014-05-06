@@ -61,6 +61,15 @@ always @(*) begin
 				wr_dirty = 1'b0;
 				mem_addr = d_addr[15:2];
 				if(((~mem_rd & ~mem_wr) | d_hit) & ~i_hit) begin
+					if(mem_wr) begin
+						dCache_wr = 1'b1;
+						wr_dirty = 1'b1;
+						dCache_wrData = (d_addr[1:0] == 2'b00) ? {d_fullLine[63:16], wr_data}  :
+												(d_addr[1:0] == 2'b01) ? {d_fullLine[63:32], wr_data, d_fullLine[15:0]} :
+												(d_addr[1:0] == 2'b10) ? {d_fullLine[63:48], wr_data, d_fullLine[31:0]} :
+												{wr_data, d_fullLine[47:0]};
+						d_useMem = 1'b0;
+					end
 					i_rdy = 1'b0;
 				  d_rdy = 1'b1;
 				  uMem_rd = 1'b1;
@@ -80,6 +89,15 @@ always @(*) begin
 				    nextState = `DATA_RD;
 					end
 				end else begin
+					if(mem_wr) begin
+							dCache_wr = 1'b1;
+							wr_dirty = 1'b1;
+							dCache_wrData = (d_addr[1:0] == 2'b00) ? {d_fullLine[63:16], wr_data}  :
+												(d_addr[1:0] == 2'b01) ? {d_fullLine[63:32], wr_data, d_fullLine[15:0]} :
+												(d_addr[1:0] == 2'b10) ? {d_fullLine[63:48], wr_data, d_fullLine[31:0]} :
+												{wr_data, d_fullLine[47:0]};
+							d_useMem = 1'b0;
+					end
 				  i_rdy = 1'b1;
 				  d_rdy = 1'b1;
 				  nextState = `IDLE;

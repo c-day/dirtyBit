@@ -61,7 +61,7 @@ cacheControl cc(.data(cacheData), .instr(cacheI), .i_rdy(instr_rdy), .d_rdy(data
 
 //////////////////////////////////////////////////  IF/ID flops ///////////////////////////////////////////////////////
 dff_16 ff00(.q(pc_FF_ID), .d(pc_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
-dff_instr ff01(.q(instr_FF_ID), .d(instr_IF_FF), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
+dff_instr ff01(.q(instr_FF_ID), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 dff_instr  icache(.q(cacheIout), .d(cacheI), .en(IF_ID_EN), .rst_n(rst_n_IF_ID), .clk(clk));
 
 always @(instr_FF_ID) begin
@@ -118,14 +118,14 @@ hzdDet hzd(
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
 									(reg1hazSel == `FWD_FROM_MEM) ? //aluResult_FF_MEM :
-											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
+											(instr_FF_MEM[15:12] == `LW) ? cacheData : aluResult_FF_MEM :
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
 assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
 									(reg2hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
 									(reg2hazSel == `FWD_FROM_MEM) ? //aluResult_MEM_FF :
-											(instr_FF_MEM[15:12] == `LW) ? rdData_MEM_FF : aluResult_FF_MEM :
+											(instr_FF_MEM[15:12] == `LW) ? cacheData : aluResult_FF_MEM :
 									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg2_ID_FF;
 
@@ -238,7 +238,7 @@ assign pc_MEM_FF = pc_FF_MEM;
 assign PCSrc_MEM_FF = PCSrc_MEM_IF;
 
 ////////////////////////////////////////////////// MEM/WB flops ///////////////////////////////////////////////////////
-dff_16 ff33(.q(rdData_FF_WB), .d(rdData_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
+dff_16 ff33(.q(rdData_FF_WB), .d(cacheData), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 dff_16 ff34(.q(aluResult_FF_WB), .d(aluResult_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 dff_16 ff40(.q(pc_FF_WB), .d(pc_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));
 dff_4  ff35(.q(wrReg_FF_WB), .d(wrReg_MEM_FF), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));

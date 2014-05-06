@@ -27,6 +27,6 @@ module IF(
     endcase
   end
   
-  IM IM(.clk(clk), .addr(pc), .rd_en(1'b1), .instr(instr));
+  //IM IM(.clk(clk), .addr(pc), .rd_en(1'b1), .instr(instr));
   
 endmodule
