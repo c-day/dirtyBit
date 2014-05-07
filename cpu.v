@@ -1,4 +1,17 @@
 `include "defines.v"
+
+/***********************************************************************************************************************/
+//    WISC.S14 Architecture
+//		ECE 552
+//		Instructor: 
+//			Eric Hoffman
+//		Authors:
+//			Craig Day
+//			Ethan Massey
+//		Team:
+//			"HoffmansAngels"
+//
+/**********************************************************************************************************************/
 module cpu(clk, rst_n, hlt, pc);
   input clk, rst_n;
   output hlt;
