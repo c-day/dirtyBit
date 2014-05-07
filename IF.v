@@ -20,13 +20,12 @@ module IF(
   assign sel = {nRst, hlt};
   
   always @(posedge clk, negedge nRst) begin
-    case (sel)
-      2'b10: pc <= nextPc;
-      2'b11: pc <= pc;
-      default: pc <= 16'd0;
-    endcase
+    if(nRst == 1'b0)
+			pc <= 0;
+		else begin
+			if(hlt) pc <= pc;
+			else pc <= nextPc;
+		end
   end
-  
-  //IM IM(.clk(clk), .addr(pc), .rd_en(1'b1), .instr(instr));
   
 endmodule

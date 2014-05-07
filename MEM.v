@@ -36,6 +36,4 @@ module MEM(
 
   assign PCSrc = (sawBr & cmp) | sawJ;
 
-  //DM DM(.clk(clk), .addr(memAddr), .re(memRd), .we(memWr), .wrt_data(wrData), .rd_data(rdData));
-
 endmodule
