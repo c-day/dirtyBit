@@ -1,6 +1,6 @@
 #####################################
 # This test focus on LW/SW and ADDZ #
-#####################################	
+#####################################
         LLB R6, 0x33		# R6 contains 0x0033
 		LLB R10, 0x56		# R10 contains 0x0056
 		LLB R8, 0x02		# R8 contains 0x0002
@@ -10,7 +10,7 @@
 		LHB R12, 0x95		# R12 contains 0x9500
 		LLB R13, 0x60
 		LHB R13, 0x95		# R13 contains 0x9560
-		
+
 ##############################
 # Now for some LW/SW testing #
 ##############################
@@ -26,7 +26,7 @@
 		B NEQ, FAIL
 #################
 #  ADDZ testing #
-#################	
+#################
 		ADDZ R5, R6, R10		# zero flag should last be set so R5 = 0x0056+0x0033
 		LLB R7, 0x89
 		LHB R7, 0x00
@@ -37,10 +37,10 @@
 		LLB R9, 0x02
 		SUB R0, R8, R9
 		B NEQ, FAIL
-				
+
 PASS:	LLB R1, 0xAA		# R1 will contain 0xFFAA
 		LHB R1, 0xAA		# R1 will contain 0xAAAA (indicated pass)
 		HLT
-		
+
 FAIL:	LLB R1, 0xFF		# R1 will contain 0xFFFF (indicates failure)
 		HLT
