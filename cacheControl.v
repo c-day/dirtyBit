@@ -50,6 +50,18 @@ unified_mem umem(.clk(clk), .rst_n(rst_n), .addr(mem_addr), .re(uMem_rd), .we(uM
 
 
 always @(*) begin
+	uMem_wr = 1'b0;
+	uMem_rd = 1'b0;
+	iCache_wr = 1'b0;
+	dCache_wr = 1'b0;
+	i_useMem = 1'b0;
+	d_useMem = 1'b0;
+	i_rdy = 1'b0;
+	d_rdy = 1'b0;
+	wr_dirty = 1'b0;
+	mem_addr = 14'd0;
+	dCache_wrData = 64'd0;
+	mem_wrData = 64'd0;
 	case (state)
 		`IDLE: begin
 				iCache_wr = 1'b0;
@@ -104,7 +116,7 @@ always @(*) begin
 				end
 		end
 		`INSTR_RD: begin
-		  if(mem_rdy) begin
+			if(mem_rdy) begin
 		    i_rdy = 1'b1;
 				iCache_wr = 1'b1;
 				i_useMem = 1'b1;
@@ -115,7 +127,7 @@ always @(*) begin
 		  end
 		end
 		`EVICT: begin
-		  if(mem_rdy) begin
+			if(mem_rdy) begin
 				nextState = `DATA_RD;
 		  end else begin
 		    nextState = `EVICT;

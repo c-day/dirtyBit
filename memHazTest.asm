@@ -14,7 +14,7 @@ add R1, R1, R4  # 7 + 4 = 11
 add R1, R1, R5  # 11 + 5 = 16 = 0x10
 
 sub R0, R1, R6
-b neq FAIL
+b neq, FAIL
 llb R1, 0xAA
 hlt
 
