@@ -12,6 +12,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, updateFlagsOnAdd);
 	wire [15:0] saturated;
 	wire tempV, tempZ, tempN;
 	wire [15:0] realSra;
+	wire test;
 
 	wire [15:0] twosSrc1;
 	
@@ -48,25 +49,29 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, updateFlagsOnAdd);
                (aluOp == `ALU_SUB) ? saturated :
                (aluOp == `ALU_NOP) ? dst :
                temp;
+
+	//WHY DOESN'T IT WORK HERE? 
+	// assign tempZ = ~|dst;
                
-	//set our zero flag 	//assign tempZ = ~| dst;
- 
- 	//set our overflow flag
+	//set our overflow flag
   assign tempV =  ({posOV, negOV} == 2'b01) ? 1'b1 :        //neg overflow
                   ({posOV, negOV} == 2'b10) ? 1'b1 :        //pos overflow
                   1'b0; 
               
   //set the negative flag
   assign tempN = dst[15];
+
+	//set the zero flag
+	assign tempZ = ~| dst;
                
   //set the zero flag if all bits are zero
-  assign Z = (aluOp == `ALU_ADD & updateFlagsOnAdd) ? ~|dst :
-					   (aluOp == `ALU_SUB) ? ~|dst :
-						 (aluOp == `ALU_AND) ? ~|dst :
-						 (aluOp == `ALU_NOR) ? ~|dst :
-						 (aluOp == `ALU_SLL) ? ~|dst :
-						 (aluOp == `ALU_SRL) ? ~|dst :
-						 (aluOp == `ALU_SRA) ? ~|dst :
+  assign Z = (aluOp == `ALU_ADD & updateFlagsOnAdd) ? tempZ :
+					   (aluOp == `ALU_SUB) ? tempZ :
+						 (aluOp == `ALU_AND) ? tempZ :
+						 (aluOp == `ALU_NOR) ? tempZ :
+						 (aluOp == `ALU_SLL) ? tempZ :
+						 (aluOp == `ALU_SRL) ? tempZ :
+						 (aluOp == `ALU_SRA) ? tempZ :
 						 flagsIn[1];
 		
 	// set the overflow flag on adds and subs			 
