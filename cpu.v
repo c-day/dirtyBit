@@ -26,7 +26,7 @@ module cpu(clk, rst_n, hlt, pc);
               targetAddr_FF_MEM, rdData_MEM_FF, rdData_FF_WB, aluResult_MEM_FF, aluResult_FF_WB,
               wrData_WB_ID, reg1_ID_FF, reg1_FF_EX, reg2_ID_FF, reg2_FF_EX, reg2_EX_FF, reg2_FF_MEM,
 							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF,
-							cacheData, cacheDout;
+							cacheData, cacheDout, instr_cache_FF;
 
   wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_MUX_FF,
               wrReg_EX_FF, wrReg_FF_MEM, wrReg_MEM_FF, wrReg_FF_WB, aluOp_ID_FF, aluOp_FF_EX,
@@ -67,7 +67,7 @@ IF IF(
   .altAddress(targetAddr_FF_MEM),
   .useAlt(PCSrc_MEM_IF),
   .pc(pc_IF_FF),
-  .instr(instr_IF_FF)
+  .instr(instr_IF_FF) // not needed anymore with the caches
 );
 
 
