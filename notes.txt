@@ -12,5 +12,3 @@ and (MEM/WB.RegisterRd ? 0)
 and not(EX/MEM.RegWrite and (EX/MEM.RegisterRd ? 0))
 and (EX/MEM.RegisterRd ? ID/EX.RegisterRt)
 and (MEM/WB.RegisterRd = ID/EX.RegisterRt)) ForwardB = 01
-
-
