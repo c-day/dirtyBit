@@ -7,19 +7,19 @@ llb R10, 0x00
 lhb R10, 0x10
 
 #load multiple values into R10 to make sure store word is workin
-sw R10, R1, 0
-sw R10, R2, 0
-sw R10, R3, 0
-sw R10, R4, 0
-sw R10, R5, 0
+sw R1, R10, 0
+sw R2, R10, 0
+sw R3, R10, 0
+sw R4, R10, 0
+sw R5, R10, 0
 lw R7, R10, 0
 
-sw R10, R5, 0
-sw R10, R4, 0
-sw R10, R3, 0
-sw R10, R2, 0
-sw R10, R1, 0
-sw R10, R5, 0
+sw R5, R10, 0
+sw R4, R10, 0
+sw R3, R10, 0
+sw R2, R10, 0
+sw R1, R10, 0
+sw R5, R10, 0
 lw R6, R10, 0
 
 sub R0, R6, R7
@@ -30,3 +30,4 @@ hlt
 
 FAIL:
 llb R1, 0xFF
+hlt
