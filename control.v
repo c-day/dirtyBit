@@ -29,7 +29,7 @@ module control(
 
   assign rdEnReg1 = (opCode == `HLT) ? 1'b0 :
                     (opCode == `B  ) ? 1'b0 :
-                    (opCode == `JAL) ? 1'b0 :
+                    //(opCode == `JAL) ? 1'b0 :
 										1'b1;
 
   assign rdEnReg2 = (opCode == `ADD) ? 1'b1 :
@@ -62,7 +62,7 @@ module control(
 
   assign rdReg1 = (opCode == `LHB) ? instr[11:8] :
                   (opCode == `LLB) ? 4'h0 :
-									(opCode == `JAL) ? 4'h0 :
+									//(opCode == `JAL) ? 4'h0 :
 									instr[7:4];
 
   assign rdReg2 = (opCode == `SW) ? instr[11:8] : 
@@ -79,7 +79,7 @@ module control(
   assign aluSrc = (opCode == `LLB) ? 1'b0 : 
                   (opCode == `SW ) ? 1'b0 :
 									(opCode == `JR ) ? 1'b1 :
-									(opCode == `JAL) ? 1'b0 :
+									//(opCode == `JAL) ? 1'b0 :
                   rdEnReg2;
 
   assign aluOp = (opCode == `ADD) ? `ALU_ADD :

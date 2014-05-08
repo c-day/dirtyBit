@@ -86,7 +86,6 @@ ID ID(
 	.i_Z(flags_EX_FF[1]),
   .o_port0(reg1_ID_FF),
   .o_port1(reg2_ID_FF),
-  .o_sext(sext_ID_FF),
   .o_instr(instr_ID_FF),
   .o_wrReg(wrReg_ID_FF),
   .o_memRd(memRd_ID_FF),
@@ -154,8 +153,7 @@ assign wrReg_MUX_FF		= (LW_Stall) ? 4'h0 : wrReg_ID_FF;
 dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));											// goes into EX stage
 dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));										// goes into EX stage
 dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));										// goes into EX stage
-dff_instr ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));						// goes into EX stage
-dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));									// goes into EX stage ******************* Can we just sext in EX to remove this flop?**
+dff_16 ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));						// goes into EX stage
 dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// passed through to MEM stage, used in forwarding logic
 dff_4  ff08(.q(aluOp_FF_EX), .d(aluOp_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));								// goes into EX stage
 dff_4  ff09(.q(shAmt_FF_EX), .d(shAmt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));								// goes into EX stage
@@ -174,7 +172,6 @@ EX EX(
   .instr(instr_FF_EX),
   .reg1(reg1_FF_EX),
   .reg2(reg2_FF_EX),
-  .sextIn(sext_FF_EX),
   .aluSrc(aluSrc_FF_EX),
   .aluOp(aluOp_FF_EX),
   .shAmt(shAmt_FF_EX),
@@ -205,7 +202,6 @@ assign instr_EX_FF = instr_FF_EX;
 
 ////////////////////////////////////////////////// EX/MEM flops ///////////////////////////////////////////////////////
 dff_16 ff20(.q(aluResult_FF_MEM), .d(aluResult_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));		// passed through to WB stage
-dff_16 ff21(.q(targetAddr_FF_MEM), .d(targetAddr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));	// sent back to IF for use in branch and jump
 dff_16 ff22(.q(reg2_FF_MEM), .d(reg2_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));							// goes into MEM stage
 dff_16 ff39(.q(pc_FF_MEM), .d(pc_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));									// passed through to WB stage
 dff_4  ff42(.q(opCode_FF_MEM), .d(instr_EX_FF[15:12]), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));		// passed back to hazard detection

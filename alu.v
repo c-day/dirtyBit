@@ -32,14 +32,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 								 (aluOp == `ALU_SRA) ? $signed($signed(src0) >>> shAmt) :	
 								 (aluOp == `ALU_LHB) ? {src1[7:0], src0[7:0]} :
 								 16'd0;
-	/*
-	always @(*) begin
-		if($signed($signed(src0) >>> shAmt) != realSra)
-			$display("SRA ERROR: saw: %h\t expected: $h", temp, $signed($signed(src0) >>> shAmt));
-	end
-	*/
-
-  
+	
   //check for positive or negative overflow
   assign posOV = (aluOp == `ALU_SUB) ? ~src0[15] & ~twosSrc1[15] & temp[15] : ~src0[15] & ~src1[15] & temp[15];
   assign negOV = (aluOp == `ALU_SUB) ? src0[15] & twosSrc1[15] & ~temp[15] : src0[15] & src1[15] & ~temp[15];
