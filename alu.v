@@ -1,7 +1,7 @@
 `include "defines.v"
-module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
-  input [15:0] src0, src1, instr;
-	input [3:0] aluOp;
+module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, opCode);
+  input [15:0] src0, src1;
+	input [3:0] aluOp, opCode;
 	input [3:0] shAmt;
 	input [2:0] flagsIn;
 	output [15:0] dst;
@@ -13,12 +13,9 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 	wire [15:0] realSra;
 	
 	wire [15:0] twosSrc1;
-	wire [3:0] opCode;
 	
 	assign twosSrc1 = (~src1+1);
 
-	assign opCode = instr[15:12];
-	
 	//sraFix sra(realSra, src0, shAmt); 
 	
 	//perform all alu operation, unsaturated arithmatic
@@ -51,9 +48,9 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
                (aluOp == `ALU_NOP) ? dst :
                temp;
                
- assign tempZ = ~|dst;
+	//set our zero flag 	assign tempZ = ~|dst;
  
- //set our overflow flag
+ 	//set our overflow flag
   assign tempV =  ({posOV, negOV} == 2'b01) ? 1'b1 :        //neg overflow
                   ({posOV, negOV} == 2'b10) ? 1'b1 :        //pos overflow
                   1'b0; 

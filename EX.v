@@ -35,6 +35,6 @@ module EX(
   assign input1 = ((instr[15:12] == `B) | (instr[15:12] == `JAL)) ? pc : reg1;
 	assign input2 = ((instr[15:12] == `B) | (instr[15:12] == `JAL)) ? offset : src1;
 
-  ALU ALU(.dst(aluResult), .V(flags[0]), .Z(flags[1]), .N(flags[2]), .src0(input1), .src1(input2), .aluOp(aluOp), .shAmt(shAmt), .flagsIn(flagsIn), .instr(instr));
+  ALU ALU(.dst(aluResult), .V(flags[0]), .Z(flags[1]), .N(flags[2]), .src0(input1), .src1(input2), .aluOp(aluOp), .shAmt(shAmt), .flagsIn(flagsIn), .opCode(instr[15:12]));
 
 endmodule

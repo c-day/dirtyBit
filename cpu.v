@@ -53,7 +53,7 @@ module cpu(clk, rst_n, hlt, pc);
 	assign rst_n_EX_MEM = rst_n;
 	assign rst_n_MEM_WB = rst_n;
 
-	assign pc = pc_FF_WB + 1;
+	assign pc = pc_FF_WB;
 
 	assign pcStallHlt = hlt | LW_Stall | ~instr_rdy | ~data_rdy;
 

@@ -35,7 +35,7 @@ module ID (
   output o_mem2reg, o_sawBr, o_sawJ, o_memRd, o_memWr, o_wrRegEn, o_hlt, o_aluSrc, o_rdReg1En, o_rdReg2En;
 
 	wire rdEn1, rdEn2;
-wm
+
 	assign o_mem2reg = o_memRd;
 	assign o_rdReg1En = rdEn1;
 	assign o_rdReg2En = rdEn2;
