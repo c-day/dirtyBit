@@ -1,5 +1,5 @@
 # Our objective here is to test some basic Read After Writes (RAW)
-# and to also double check and make sure our branches/jumps are 
+# and to also double check and make sure our branches/jumps are
 # working properly
 
    # first we setup our registers
@@ -7,7 +7,7 @@
     LLB R13, 0x01
     LLB R1,  0x12
     LLB R2,  0x21
-   
+
     # do our first add the W part of RAW
     ADD R3,  R2, R1      # we expect 0x33
     # no we do our R of RAW
@@ -22,5 +22,5 @@
 
 
 
-BAD: 
+BAD:
     HLT

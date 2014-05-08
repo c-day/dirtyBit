@@ -10,10 +10,10 @@
 ARND:	LLB R0, 0x00		# This should not set the Z flag
 		B 	EQ, FAIL
 		B	UNCOND, PASS
-		
+
 FAIL:	LLB R1, 0xFF		# R1 will contain 0xFFFF (indicates failure)
-		HLT		
-		
+		HLT
+
 PASS:	LLB R1, 0xAA		# R1 will contain 0xFFAA
 		LHB R1, 0xAA		# R1 will contain 0xAAAA (indicated pass)
 		HLT

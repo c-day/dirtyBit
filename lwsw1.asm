@@ -24,15 +24,15 @@ lw R12, R10, 0  #R12 holds 0
 
 # make sure everything is correct
 sub R0, R6, R5
-bne FAIL
+b neq FAIL
 sub R0, R7, R4
-bne FAIL
+b neq FAIL
 sub R0, R8, R3
-bne FAIL
+b neq FAIL
 sub R0, R9, R2
-bne FAIL
+b neq FAIL
 sub R0, R11, R1
-bne FAIL
+b neq FAIL
 sub R0, R12, R0
 beq DONE
 

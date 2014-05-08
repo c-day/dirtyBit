@@ -15,11 +15,11 @@ sw  R6, R5, 8       # store 0x07 in mem location 0xF0
 lw  R2, R2, 8       # expect to get 0x07
 
 sub R0, R2, R6      # 0x07 - 0x07 = 0
-bne FAIL
+b neq FAIL
 add R0, R12, R12    # 0 + 0 = 0
-bne FAIL
+b neq FAIL
 sub R0, R4, R13     # 0x0F - 0x0F = 0
-bne FAIL
+b neq FAIL
 
 # set R1 to all A's WE WIN!
 llb R1, 0xAA
