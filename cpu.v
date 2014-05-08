@@ -48,7 +48,7 @@ module cpu(clk, rst_n, hlt, pc);
 	assign EX_MEM_EN = ~(hlt_FF_MEM | ~instr_rdy | ~data_rdy);
 	assign MEM_WB_EN = ~(hlt | ~instr_rdy | ~data_rdy);
 
-	assign rst_n_IF_ID = rst_n & ~PCSrc_MEM_IF;
+	assign rst_n_IF_ID = rst_n & ~PCSrc_EX_IF;
 	assign rst_n_ID_EX = rst_n;// & ~PCSrc_MEM_IF;
 	assign rst_n_EX_MEM = rst_n;
 	assign rst_n_MEM_WB = rst_n;
@@ -215,17 +215,19 @@ dff_16 ff22(.q(reg2_FF_MEM), .d(reg2_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM
 dff_16 ff39(.q(pc_FF_MEM), .d(pc_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));									// passed through to WB stage
 dff_4  ff42(.q(opCode_FF_MEM), .d(instr_EX_FF[15:12]), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));		// passed back to hazard detection
 dff_4  ff23(.q(wrReg_FF_MEM), .d(wrReg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// passed through to WB stage
-//dff_3  ff24(.q(flags_FF_MEM), .d(flags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
+dff_3  ff24(.q(flags_FF_MEM), .d(flags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
 //dff_3  ff25(.q(branchOp_FF_MEM), .d(branchOp_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));			// goes into MEM stage
-dff    ff26(.q(memRd_FF_MEM), .d(memRd_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
-dff    ff27(.q(memWr_FF_MEM), .d(memWr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
+dff    ff26(.q(memRd_FF_MEM), .d(memRd_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into cache controller
+dff    ff27(.q(memWr_FF_MEM), .d(memWr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into cache controller
 dff    ff28(.q(mem2reg_FF_MEM), .d(mem2reg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));				// passed through to WB stage
 //dff    ff29(.q(sawBr_FF_MEM), .d(sawBr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
 //dff    ff30(.q(sawJ_FF_MEM), .d(sawJ_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));							// goes into MEM stage
 dff    ff31(.q(hlt_FF_MEM), .d(hlt_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));								// passed through to WB stage
-dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
+dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));				// passed back to hazard detection
+dff    ff30(.q(PCSrc_FF_MEM), .d(PCSrc_EX_IF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// passed through to WB stage
 
-// if we move our branch taken logic, can remove this whole module and all the flops going into it.  
+// if we move our branch taken logic, can remove this whole module and all the flops going into it.
+/*  
 MEM MEM(
   .clk(clk),
   .memAddr(aluResult_FF_MEM),
@@ -239,6 +241,7 @@ MEM MEM(
   .rdData(rdData_MEM_FF),
   .PCSrc(PCSrc_MEM_IF)
 );
+*/
 
 ////////////////////////////////////////////// MEM/WB passthrough /////////////////////////////////////////////////////
 assign wrReg_MEM_FF = wrReg_FF_MEM;
@@ -247,7 +250,7 @@ assign mem2reg_MEM_FF = mem2reg_FF_MEM;
 assign hlt_MEM_FF = hlt_FF_MEM;
 assign wrRegEn_MEM_FF = wrRegEn_FF_MEM;
 assign pc_MEM_FF = pc_FF_MEM;
-assign PCSrc_MEM_FF = PCSrc_MEM_IF;
+assign PCSrc_MEM_FF = PCSrc_FF_MEM;
 
 ////////////////////////////////////////////////// MEM/WB flops ///////////////////////////////////////////////////////
 dff_16 ff33(.q(rdData_FF_WB), .d(cacheData), .en(MEM_WB_EN), .rst_n(rst_n_MEM_WB), .clk(clk));							// goes into WB stage
