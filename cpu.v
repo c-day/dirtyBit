@@ -28,9 +28,9 @@ module cpu(clk, rst_n, hlt, pc);
 							pc_FF_EX, pc_ID_FF, pc_EX_FF, pc_FF_MEM, pc_MEM_FF, pc_FF_WB, instr_FF_MEM, instr_EX_FF,
 							cacheData, cacheDout, instr_cache_FF;
 
-  wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_MUX_FF,
+  wire [3:0]  wrReg_FF_EX, wrReg_ID_FF, wrReg_MUX_FF, opCode_FF_MEM, 
               wrReg_EX_FF, wrReg_FF_MEM, wrReg_MEM_FF, wrReg_FF_WB, aluOp_ID_FF, aluOp_FF_EX,
-              shAmt_ID_FF, shAmt_FF_EX, rdReg1_ID_FF, rdReg1_FF_EX, rdReg2_ID_FF, rdReg2_FF_EX;
+              shAmt_ID_FF, shAmt_FF_EX, rdReg1_ID_FF, rdReg2_ID_FF;
 
   wire [1:0] reg1hazSel, reg2hazSel;
 
@@ -125,14 +125,14 @@ hzdDet hzd(
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
 									(reg1hazSel == `FWD_FROM_MEM) ?
-											(instr_FF_MEM[15:12] == `LW) ? cacheData : aluResult_FF_MEM : // is this line necessary? 
+											(opCode_FF_MEM == `LW) ? cacheData : aluResult_FF_MEM : // is this line necessary? 
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
 assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
 									(reg2hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
 									(reg2hazSel == `FWD_FROM_MEM) ?
-											(instr_FF_MEM[15:12] == `LW) ? cacheData : aluResult_FF_MEM : // is this line necessary? 
+											(opCode_FF_MEM == `LW) ? cacheData : aluResult_FF_MEM : // is this line necessary? 
 									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg2_ID_FF;
 
@@ -155,13 +155,11 @@ assign wrReg_MUX_FF		= (LW_Stall) ? 4'h0 : wrReg_ID_FF;
 dff_16 ff02(.q(pc_FF_EX), .d(pc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));											// goes into EX stage
 dff_16 ff03(.q(reg1_FF_EX), .d(FWD_reg1), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));										// goes into EX stage
 dff_16 ff04(.q(reg2_FF_EX), .d(FWD_reg2), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));										// goes into EX stage
-dff_instr ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));						// goes into EX stage ******************* Do we need the whole thing? *****************
+dff_instr ff05(.q(instr_FF_EX), .d(instr_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));						// goes into EX stage
 dff_16 ff06(.q(sext_FF_EX), .d(sext_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));									// goes into EX stage ******************* Can we just sext in EX to remove this flop?**
 dff_4  ff07(.q(wrReg_FF_EX), .d(wrReg_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// passed through to MEM stage, used in forwarding logic
 dff_4  ff08(.q(aluOp_FF_EX), .d(aluOp_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));								// goes into EX stage ******************* If we have the intruction, is this needed? **
 dff_4  ff09(.q(shAmt_FF_EX), .d(shAmt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));								// goes into EX stage
-dff_4  ff10(.q(rdReg1_FF_EX), .d(rdReg1_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// where does this go?!?!?!? ********************** Probaly can just be deleted *******
-dff_4  ff11(.q(rdReg2_FF_EX), .d(rdReg2_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// where does this go?!?!?!? ********************** Probably can be deleted ***********
 dff    ff12(.q(memRd_FF_EX), .d(memRd_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// passed through to MEM stage
 dff    ff13(.q(memWr_FF_EX), .d(memWr_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// passed through to MEM stage
 dff    ff14(.q(mem2reg_FF_EX), .d(mem2reg_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));						// passed through to MEM stage
@@ -206,7 +204,8 @@ dff_16 ff20(.q(aluResult_FF_MEM), .d(aluResult_EX_FF), .en(EX_MEM_EN), .rst_n(rs
 dff_16 ff21(.q(targetAddr_FF_MEM), .d(targetAddr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));	// sent back to IF for use in branch and jump
 dff_16 ff22(.q(reg2_FF_MEM), .d(reg2_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));							// goes into MEM stage
 dff_16 ff39(.q(pc_FF_MEM), .d(pc_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));									// passed through to WB stage
-dff_instr ff42(.q(instr_FF_MEM), .d(instr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));					// used in our hazard detection unit ****************** Check Me (need whole instr?)*********
+//dff_instr ff42(.q(instr_FF_MEM), .d(instr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));					// used in our hazard detection unit ****************** Check Me (need whole instr?)*********
+dff_4  ff42(.q(opCode_FF_MEM), .d(instr_EX_FF[15:12]), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));
 dff_4  ff23(.q(wrReg_FF_MEM), .d(wrReg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// passed through to WB stage
 dff_3  ff24(.q(flags_FF_MEM), .d(flags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
 dff_3  ff25(.q(branchOp_FF_MEM), .d(branchOp_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));			// goes into MEM stage
