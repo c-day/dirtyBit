@@ -41,7 +41,7 @@ module cpu(clk, rst_n, hlt, pc);
         wrRegEn_ID_FF, wrRegEn_FF_EX, wrRegEn_EX_FF, wrRegEn_FF_MEM, wrRegEn_MEM_FF, wrRegEn_FF_WB,
 				rst_n_IF_ID, rst_n_ID_EX, PCSrc_FF_WB, rst_n_EX_MEM, rst_n_MEM_WB, hlt_FF_MEM, hlt_FF_WB,
 				rdReg1En_ID, rdReg2En_ID, memRd_MUX_FF, memWr_MUX_FF, wrRegEn_MUX_FF, LW_Stall ,oldStall,
-				pcStallHlt, PCSrc_MEM_IF, instr_rdy, data_rdy, PCSrc_EX_IF;
+				pcStallHlt, PCSrc_MEM_IF, instr_rdy, data_rdy, PCSrc_EX_IF, updateFlagsOnAdd_ID_FF, updateFlagsOnAdd_FF_EX;
 
 	assign IF_ID_EN = ~(hlt | LW_Stall | ~instr_rdy | ~data_rdy);
 	assign ID_EX_EN = ~(hlt_FF_EX | ~instr_rdy | ~data_rdy);
@@ -99,7 +99,8 @@ ID ID(
   .o_hlt(hlt_ID_FF),
   .o_wrRegEn(wrRegEn_ID_FF),
 	.o_rdReg1En(rdReg1En_ID),
-	.o_rdReg2En(rdReg2En_ID)
+	.o_rdReg2En(rdReg2En_ID),
+	.o_updateFlagsOnAdd(updateFlagsOnAdd_ID_FF)
 );
 
 hzdDet hzd(
@@ -164,6 +165,7 @@ dff    ff16(.q(sawJ_FF_EX), .d(sawJ_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), 
 dff    ff17(.q(aluSrc_FF_EX), .d(aluSrc_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));							// goes into EX stage
 dff    ff18(.q(hlt_FF_EX), .d(hlt_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));										// passed through to MEM stage
 dff    ff19(.q(wrRegEn_FF_EX), .d(wrRegEn_MUX_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));					// passed through to MEM stage, used in forwarding logic
+dff    ff70(.q(updateFlagsOnAdd_FF_EX), .d(updateFlagsOnAdd_ID_FF), .en(ID_EX_EN), .rst_n(rst_n_ID_EX), .clk(clk));
 
 
 EX EX(
@@ -176,7 +178,8 @@ EX EX(
   .shAmt(shAmt_FF_EX),
   .aluResult(aluResult_EX_FF),
   .flags(flags_EX_FF),
-  .flagsIn(flags_FF_MEM)
+  .flagsIn(flags_FF_MEM),
+	.updateFlagsOnAdd(updateFlagsOnAdd_FF_EX)
 );
 
 branchLogic bl(

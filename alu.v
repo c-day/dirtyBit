@@ -1,9 +1,10 @@
 `include "defines.v"
-module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, opCode);
+module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, updateFlagsOnAdd);
   input [15:0] src0, src1;
-	input [3:0] aluOp, opCode;
+	input [3:0] aluOp;
 	input [3:0] shAmt;
 	input [2:0] flagsIn;
+	input updateFlagsOnAdd;
 	output [15:0] dst;
 	output V, Z, N;
 	
@@ -11,7 +12,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, opCode);
 	wire [15:0] saturated;
 	wire tempV, tempZ, tempN;
 	wire [15:0] realSra;
-	
+
 	wire [15:0] twosSrc1;
 	
 	assign twosSrc1 = (~src1+1);
@@ -48,7 +49,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, opCode);
                (aluOp == `ALU_NOP) ? dst :
                temp;
                
-	//set our zero flag 	assign tempZ = ~|dst;
+	//set our zero flag 	//assign tempZ = ~| dst;
  
  	//set our overflow flag
   assign tempV =  ({posOV, negOV} == 2'b01) ? 1'b1 :        //neg overflow
@@ -59,43 +60,24 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, opCode);
   assign tempN = dst[15];
                
   //set the zero flag if all bits are zero
-  assign Z = (aluOp == `ALU_ADD) ?
-								(opCode == `JAL) ? flagsIn[1] :
-								(opCode == `JR) ? flagsIn[1] :
-								(opCode == `LLB) ? flagsIn[1] :
-								(opCode == `LW) ? flagsIn[1] : 
-								(opCode == `SW) ? flagsIn[1] : 
-								(opCode == `B ) ? flagsIn[1] : 
-								tempZ :
-					   (aluOp == `ALU_SUB) ? tempZ :
-						 (aluOp == `ALU_AND) ? tempZ :
-						 (aluOp == `ALU_NOR) ? tempZ :
-						 (aluOp == `ALU_SLL) ? tempZ :
-						 (aluOp == `ALU_SRL) ? tempZ :
-						 (aluOp == `ALU_SRA) ? tempZ :
+  assign Z = (aluOp == `ALU_ADD & updateFlagsOnAdd) ? ~|dst :
+					   (aluOp == `ALU_SUB) ? ~|dst :
+						 (aluOp == `ALU_AND) ? ~|dst :
+						 (aluOp == `ALU_NOR) ? ~|dst :
+						 (aluOp == `ALU_SLL) ? ~|dst :
+						 (aluOp == `ALU_SRL) ? ~|dst :
+						 (aluOp == `ALU_SRA) ? ~|dst :
 						 flagsIn[1];
-						 
-	assign V = (aluOp == `ALU_ADD) ?
-								(opCode == `JAL) ? flagsIn[0] :
-								(opCode == `JR) ? flagsIn[0] :
-								(opCode == `LLB) ? flagsIn[0] :
-								(opCode == `LW) ? flagsIn[0] : 
-								(opCode == `SW) ? flagsIn[0] : 
-								(opCode == `B ) ? flagsIn[0] : 
-								tempV :
+		
+	// set the overflow flag on adds and subs			 
+	assign V = (aluOp == `ALU_ADD & updateFlagsOnAdd) ? tempV :
 	           (aluOp == `ALU_SUB) ? tempV :
-	           flagsIn[2];
-	           
-	assign N = (aluOp == `ALU_ADD) ?
-								(opCode == `JAL) ? flagsIn[2] :
-								(opCode == `JR) ? flagsIn[2] :
-								(opCode == `LLB) ? flagsIn[2] :
-								(opCode == `LW) ? flagsIn[2] : 
-								(opCode == `SW) ? flagsIn[2] : 
-								(opCode == `B ) ? flagsIn[2] : 
-								tempN :
-	           (aluOp == `ALU_SUB) ? tempN :
 	           flagsIn[0];
+	           
+	// set the negative flag on adds and subs
+	assign N = (aluOp == `ALU_ADD & updateFlagsOnAdd) ? tempN :
+	           (aluOp == `ALU_SUB) ? tempN :
+	           flagsIn[2];
 	           
 endmodule
 

@@ -16,11 +16,12 @@ module control(
   sawJ,
   aluSrc,
   hlt, 
-	Z
+	Z,
+	updateFlagsOnAdd
 );
   input [15:0] instr;
 	input Z;
-  output rdEnReg1, rdEnReg2, wrRegEn, memRd, memWr, mem2reg, sawBr, sawJ, aluSrc, hlt;
+  output rdEnReg1, rdEnReg2, wrRegEn, memRd, memWr, mem2reg, sawBr, sawJ, aluSrc, hlt, updateFlagsOnAdd;
   output [3:0] rdReg1, rdReg2, wrReg, aluOp, shAmt;
 
   wire [3:0] opCode = instr[15:12];
@@ -98,6 +99,14 @@ module control(
 								 (opCode == `B  ) ? `ALU_ADD :
 								 (opCode == `JAL) ? `ALU_ADD :
                  `ALU_NOP;
+
+	assign updateFlagsOnAdd = 	(opCode == `JAL) ? 1'b0 :
+															(opCode == `JR) ? 1'b0 :
+															(opCode == `LLB) ? 1'b0 :
+															(opCode == `LW) ? 1'b0 : 
+															(opCode == `SW) ? 1'b0 : 
+															(opCode == `B ) ? 1'b0 :
+															1'b1;
 
   assign shAmt = instr[3:0];
 
