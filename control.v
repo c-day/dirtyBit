@@ -39,8 +39,7 @@ module control(
                     (opCode == `NOR) ? 1'b1 :
 										(opCode == `JR ) ? 1'b1 :
 										(opCode == `SW ) ? 1'b1 :
-										//(opCode == `JAL) ? 1'b1 :
-                    1'b0;
+										1'b0;
 
   assign wrRegEn = (opCode == `HLT) ? 1'b0 :
                    (opCode == `SW ) ? 1'b0 :
@@ -68,7 +67,6 @@ module control(
 
   assign rdReg2 = (opCode == `SW) ? instr[11:8] : 
 									(opCode == `JR) ? 4'h0 :
-									//(opCode == `JAL) ? 4'h0 :
 									instr[3:0];
 
   assign wrReg = (opCode == `JAL) ? 4'hF :

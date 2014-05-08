@@ -4,15 +4,13 @@ module IF(
   nRst,
   altAddress, 
   useAlt, 
-  pc,
-  instr
+  pc
 );
 
   input clk, hlt, useAlt, nRst;
   input [15:0] altAddress;
   output reg [15:0] pc;
-	output [15:0] instr;
-  
+
   wire [15:0] nextPc;
   wire [1:0] sel;
   

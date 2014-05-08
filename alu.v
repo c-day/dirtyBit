@@ -19,7 +19,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 
 	assign opCode = instr[15:12];
 	
-	sraFix sra(realSra, src0, shAmt); 
+	//sraFix sra(realSra, src0, shAmt); 
 	
 	//perform all alu operation, unsaturated arithmatic
 	assign 	temp = (aluOp == `ALU_ADD) ? src0 + src1 :
@@ -28,9 +28,17 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 								 (aluOp == `ALU_NOR) ? ~(src0 | src1) :
 								 (aluOp == `ALU_SLL) ? src0 << shAmt :
 								 (aluOp == `ALU_SRL) ? src0 >> shAmt :
-								 (aluOp == `ALU_SRA) ? realSra :	
+								 //(aluOp == `ALU_SRA) ? realSra :	
+								 (aluOp == `ALU_SRA) ? $signed($signed(src0) >>> shAmt) :	
 								 (aluOp == `ALU_LHB) ? {src1[7:0], src0[7:0]} :
 								 16'd0;
+	/*
+	always @(*) begin
+		if($signed($signed(src0) >>> shAmt) != realSra)
+			$display("SRA ERROR: saw: %h\t expected: $h", temp, $signed($signed(src0) >>> shAmt));
+	end
+	*/
+
   
   //check for positive or negative overflow
   assign posOV = (aluOp == `ALU_SUB) ? ~src0[15] & ~twosSrc1[15] & temp[15] : ~src0[15] & ~src1[15] & temp[15];
@@ -61,7 +69,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
   assign tempN = dst[15];
                
   //set the zero flag if all bits are zero
-  assign Z = (aluOp == `ALU_ADD) ? //tempZ :
+  assign Z = (aluOp == `ALU_ADD) ?
 								(opCode == `JAL) ? flagsIn[1] :
 								(opCode == `JR) ? flagsIn[1] :
 								(opCode == `LLB) ? flagsIn[1] :
@@ -77,7 +85,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 						 (aluOp == `ALU_SRA) ? tempZ :
 						 flagsIn[1];
 						 
-	assign V = (aluOp == `ALU_ADD) ? //tempV :
+	assign V = (aluOp == `ALU_ADD) ?
 								(opCode == `JAL) ? flagsIn[0] :
 								(opCode == `JR) ? flagsIn[0] :
 								(opCode == `LLB) ? flagsIn[0] :
@@ -88,7 +96,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 	           (aluOp == `ALU_SUB) ? tempV :
 	           flagsIn[2];
 	           
-	assign N = (aluOp == `ALU_ADD) ? //tempN :
+	assign N = (aluOp == `ALU_ADD) ?
 								(opCode == `JAL) ? flagsIn[2] :
 								(opCode == `JR) ? flagsIn[2] :
 								(opCode == `LLB) ? flagsIn[2] :
@@ -101,7 +109,7 @@ module ALU(dst, V, Z, N, src0, src1, aluOp, shAmt, flagsIn, instr);
 	           
 endmodule
 
-
+/*
 module sraFix(out, in, amt);
   input [15:0] in;
   input [3:0] amt;
@@ -125,4 +133,4 @@ module sraFix(out, in, amt);
                {{15{in[15]}}, in[15:2]};
                
 endmodule
-               
+*/            

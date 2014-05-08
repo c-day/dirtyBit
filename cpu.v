@@ -49,7 +49,7 @@ module cpu(clk, rst_n, hlt, pc);
 	assign MEM_WB_EN = ~(hlt | ~instr_rdy | ~data_rdy);
 
 	assign rst_n_IF_ID = rst_n & ~PCSrc_EX_IF;
-	assign rst_n_ID_EX = rst_n;// & ~PCSrc_MEM_IF;
+	assign rst_n_ID_EX = rst_n;
 	assign rst_n_EX_MEM = rst_n;
 	assign rst_n_MEM_WB = rst_n;
 
@@ -65,10 +65,8 @@ IF IF(
   .hlt(pcStallHlt),
   .nRst(rst_n),
   .altAddress(targetAddr_EX_FF),
-  //.useAlt(PCSrc_MEM_IF),
-	.useAlt(PCSrc_EX_IF),
-  .pc(pc_IF_FF),
-  .instr(instr_IF_FF) // not needed anymore with the caches
+  .useAlt(PCSrc_EX_IF),
+  .pc(pc_IF_FF)
 );
 
 
@@ -125,15 +123,15 @@ hzdDet hzd(
 ///////////////////////////////////////////// Data Forwarding Logic ///////////////////////////////////////////////////
 assign FWD_reg1 = (reg1hazSel == `NO_FWD) ? reg1_ID_FF :
 									(reg1hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg1hazSel == `FWD_FROM_MEM) ? //aluResult_FF_MEM :
-											(opCode_FF_MEM == `LW) ? cacheData : aluResult_FF_MEM : // is this line necessary? 
+									(reg1hazSel == `FWD_FROM_MEM) ?
+											(opCode_FF_MEM == `LW) ? cacheData : aluResult_FF_MEM :
 									(reg1hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg1_ID_FF;
 									
 assign FWD_reg2 = (reg2hazSel == `NO_FWD) ? reg2_ID_FF :
 									(reg2hazSel == `FWD_FROM_EX) ? aluResult_EX_FF :
-									(reg2hazSel == `FWD_FROM_MEM) ? //aluResult_FF_MEM :
-											(opCode_FF_MEM == `LW) ? cacheData : aluResult_FF_MEM : // is this line necessary? 
+									(reg2hazSel == `FWD_FROM_MEM) ?
+											(opCode_FF_MEM == `LW) ? cacheData : aluResult_FF_MEM :
 									(reg2hazSel == `FWD_FROM_WB) ? wrData_WB_ID :
 									reg2_ID_FF;
 
@@ -199,12 +197,9 @@ assign wrReg_EX_FF = wrReg_FF_EX;
 assign memRd_EX_FF = memRd_FF_EX;
 assign memWr_EX_FF = memWr_FF_EX;
 assign mem2reg_EX_FF = mem2reg_FF_EX;
-//assign sawBr_EX_FF = sawBr_FF_EX;
-//assign sawJ_EX_FF = sawJ_FF_EX;
 assign hlt_EX_FF = hlt_FF_EX;
 assign wrRegEn_EX_FF = wrRegEn_FF_EX;
 assign reg2_EX_FF = reg2_FF_EX;
-//assign branchOp_EX_FF = instr_FF_EX[11:9];
 assign pc_EX_FF = pc_FF_EX;
 assign instr_EX_FF = instr_FF_EX;
 
@@ -216,32 +211,12 @@ dff_16 ff39(.q(pc_FF_MEM), .d(pc_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .
 dff_4  ff42(.q(opCode_FF_MEM), .d(instr_EX_FF[15:12]), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));		// passed back to hazard detection
 dff_4  ff23(.q(wrReg_FF_MEM), .d(wrReg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// passed through to WB stage
 dff_3  ff24(.q(flags_FF_MEM), .d(flags_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
-//dff_3  ff25(.q(branchOp_FF_MEM), .d(branchOp_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));			// goes into MEM stage
 dff    ff26(.q(memRd_FF_MEM), .d(memRd_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into cache controller
 dff    ff27(.q(memWr_FF_MEM), .d(memWr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into cache controller
 dff    ff28(.q(mem2reg_FF_MEM), .d(mem2reg_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));				// passed through to WB stage
-//dff    ff29(.q(sawBr_FF_MEM), .d(sawBr_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// goes into MEM stage
-//dff    ff30(.q(sawJ_FF_MEM), .d(sawJ_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));							// goes into MEM stage
 dff    ff31(.q(hlt_FF_MEM), .d(hlt_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));								// passed through to WB stage
 dff    ff32(.q(wrRegEn_FF_MEM), .d(wrRegEn_EX_FF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));				// passed back to hazard detection
 dff    ff30(.q(PCSrc_FF_MEM), .d(PCSrc_EX_IF), .en(EX_MEM_EN), .rst_n(rst_n_EX_MEM), .clk(clk));						// passed through to WB stage
-
-// if we move our branch taken logic, can remove this whole module and all the flops going into it.
-/*  
-MEM MEM(
-  .clk(clk),
-  .memAddr(aluResult_FF_MEM),
-  .flags(flags_FF_MEM),
-  .wrData(reg2_FF_MEM),
-  .memWr(memWr_FF_MEM),
-  .memRd(memRd_FF_MEM),
-  .branchOp(branchOp_FF_MEM),
-  .sawBr(sawBr_FF_MEM),
-  .sawJ(sawJ_FF_MEM),
-  .rdData(rdData_MEM_FF),
-  .PCSrc(PCSrc_MEM_IF)
-);
-*/
 
 ////////////////////////////////////////////// MEM/WB passthrough /////////////////////////////////////////////////////
 assign wrReg_MEM_FF = wrReg_FF_MEM;
