@@ -64,7 +64,7 @@ IF IF(
   .clk(clk),
   .hlt(pcStallHlt),
   .nRst(rst_n),
-  .altAddress(targetAddr_EX_FF),
+  .altAddress(aluResult_EX_FF),
   .useAlt(PCSrc_EX_IF),
   .pc(pc_IF_FF)
 );
@@ -79,14 +79,12 @@ ID ID(
   .i_nRst(rst_n),
   .i_hlt(hlt),
   .i_instr(instr_FF_ID),
-  .i_pc(pc_FF_ID),
   .i_wrReg(wrReg_FF_WB),
   .i_wrData(wrData_WB_ID),
   .i_wrEn(wrRegEn_FF_WB),
 	.i_Z(flags_EX_FF[1]),
   .o_port0(reg1_ID_FF),
   .o_port1(reg2_ID_FF),
-  .o_instr(instr_ID_FF),
   .o_wrReg(wrReg_ID_FF),
   .o_memRd(memRd_ID_FF),
   .o_memWr(memWr_ID_FF),
@@ -141,7 +139,8 @@ dff stallTrack(.q(oldStall), .d(LW_Stall), .en(1'b1), .rst_n(1'b1), .clk(clk));
 dff  lastWrRegEnFF(.q(lastWrRegEn), .d(wrRegEn_ID_FF), .en(1'b1), .rst_n(1'b1), .clk(clk));
 
 /////////////////////////////////////////////// ID/EX passthrough /////////////////////////////////////////////////////
-assign pc_ID_FF = pc_FF_ID;
+assign pc_ID_FF = pc_FF_ID + 1;
+assign instr_ID_FF = instr_FF_ID;
 
 /////////////////////////////////////////// No-op injection on stall //////////////////////////////////////////////////
 assign memRd_MUX_FF 	= (LW_Stall) ? 1'b0 : memRd_ID_FF;
@@ -177,8 +176,7 @@ EX EX(
   .shAmt(shAmt_FF_EX),
   .aluResult(aluResult_EX_FF),
   .flags(flags_EX_FF),
-  .targetAddr(targetAddr_EX_FF),
-	.flagsIn(flags_FF_MEM)
+  .flagsIn(flags_FF_MEM)
 );
 
 branchLogic bl(

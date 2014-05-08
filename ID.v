@@ -4,15 +4,12 @@ module ID (
   i_nRst,
   i_hlt,
   i_instr,
-  i_pc,
   i_wrReg,
   i_wrData,
   i_wrEn,
 	i_Z,
   o_port0,
   o_port1,
-  //o_sext,
-  o_instr,
   o_wrReg,
   o_memRd,
   o_memWr,
@@ -32,20 +29,13 @@ module ID (
 
   input i_clk, i_nRst, i_wrEn, i_hlt, i_Z;
   input [3:0] i_wrReg;
-  input [15:0] i_wrData, i_instr, i_pc;
-  output [15:0] o_port0, o_port1, o_instr;//, o_sext;
+  input [15:0] i_wrData, i_instr;
+  output [15:0] o_port0, o_port1;
   output [3:0] o_wrReg, o_aluOp, o_shAmt, o_rdReg1, o_rdReg2;
   output o_mem2reg, o_sawBr, o_sawJ, o_memRd, o_memWr, o_wrRegEn, o_hlt, o_aluSrc, o_rdReg1En, o_rdReg2En;
 
 	wire rdEn1, rdEn2;
-
-	/*
-  assign o_sext = (i_instr[15:12] == `LW) ? {{12{i_instr[3]}}, i_instr[3:0]} : 
-                  (i_instr[15:12] == `SW) ? {{12{i_instr[3]}}, i_instr[3:0]} :
-                  {{8{i_instr[7]}}, i_instr[7:0]};
-	*/
-
-  assign o_instr = i_instr;
+wm
 	assign o_mem2reg = o_memRd;
 	assign o_rdReg1En = rdEn1;
 	assign o_rdReg2En = rdEn2;
